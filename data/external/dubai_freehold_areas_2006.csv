@@ -1,0 +1,24 @@
+no,area_as_written,plots,comm_num,community_in_dubai_geojson,match_note
+1,Umm Hurair 2,013,315,UMM HURAIR SECOND,exact name
+2,Al Barsha South 2,002,672,AL BARSHA SOUTH SECOND,exact name
+3,Al Barsha South 3,002,673,AL BARSHA SOUTH THIRD,exact name
+4,Emirates Hills 1,004; 814,,,not matched: no community of this name in dubai.geojson
+5,Emirates Hills 2,001; 049,,,not matched: no community of this name in dubai.geojson
+6,Emirates Hills 3,001,,,not matched: no community of this name in dubai.geojson
+7,Jebel Ali,051; 074; 081; 082; 083; 084; 142; 143; 391,,,not matched: plots spread over several Jabal Ali communities
+8,Al Jaddaf,003; 007; 008,326,AL JADAF,spelling variant
+9,The World Islands,001,303,WORLD ISLANDS,exact name
+10,Ras al Khor,165,413,RAS AL KHOR,exact name
+11,Al Rowyah,063; 065,,,not matched: three Al Rowaiyah communities and the plots do not say which
+12,Sheikh Zayed Road,118; 147,,,not matched: a road not a community
+13,Sofouh 1,069,372,AL SAFOUH FIRST,spelling variant
+14,Sofouh 2,005,382,AL SAFOUH SECOND,spelling variant
+15,Al-Qouz 3,005; 006,358,AL QOUZ THIRD,exact name
+16,Al-Qouz Industrial Area 2,010; 030,365,AL QOUZ IND.SECOND,exact name
+17,Al-Qouz Industrial Area 3,028,368,AL QOUZ IND.THIRD,exact name
+18,Mirdif,143; 144,251,MIRDIF,exact name
+19,Dubai Marina,007; 014; 015; 033,392,MARSA DUBAI,Arabic name of Dubai Marina
+20,Palm Jebel Ali,001,501,NAKHLAT JABAL ALI,Arabic name (Nakhlat = Palm)
+21,Palm Jumairah,001,381,NAKHLAT JUMEIRA,Arabic name (Nakhlat = Palm)
+22,Nad al-Sheba,209; 215; 222,,,not matched: four Nadd Al Shiba communities and the plots do not say which
+23,Warsan 1,002,621,WARSAN FIRST,exact name

@@ -4,6 +4,8 @@ CS333 Part 3 - data preparation for the three D3 visualizations.
 Input  : the course files (same as Part 2 + Part 3 extras), downloaded from
          https://github.com/sharios/CS333/tree/main/2026-27
 Output : small JSON files in ../data/ that the D3 pages load.
+Outside: ../data/external/*.csv, three small datasets from official sources
+         (World Bank, RTA / Dubai Media Office, Dubai Legislation Portal); see SOURCES.md.
 
 Run    : python prepare_data.py  <folder-with-the-raw-course-files>
 
@@ -132,6 +134,30 @@ def segment(row):
 
 s["seg"] = s.apply(segment, axis=1)
 SEGS = ["Studio", "1BR", "2BR", "3BR", "4BR+", "Villa"]
+
+# ---------------------------------------------------------------- OUTSIDE DATA (data/external, see SOURCES.md)
+EXT = OUT / "external"
+# (a) World Bank: UAE consumer-price inflation, annual %  ->  price index with 2015 = 100
+inf = pd.read_csv(EXT / "worldbank_uae_inflation.csv").set_index("year").inflation_pct
+CPI = {2015: 100.0}
+for y in range(2016, 2026):
+    CPI[y] = CPI[y - 1] * (1 + inf[y] / 100)
+CPI[2026] = CPI[2025]          # no 2026 figure published yet: assume 2025 prices
+s["mps_real"] = s.meter_sale_price / s.year.map(CPI) * 100      # AED/m2 in 2015 dirhams
+# (b) RTA: annual riders per metro station, from RTA / Dubai Media Office press releases
+rta = pd.read_csv(EXT / "rta_metro_station_ridership.csv")
+RIDERS = {code: {int(r.year): float(r.riders_million) for r in g.itertuples()} for code, g in rta.groupby("station_code")}
+# (c) Dubai Regulation No. 3 of 2006: the original 23 freehold areas, matched to dubai.geojson communities
+fh = pd.read_csv(EXT / "dubai_freehold_areas_2006.csv", dtype={"comm_num": "Int64"})
+FREEHOLD_2006 = [int(c) for c in fh.comm_num.dropna()]
+external_log = {
+    "worldbank_cpi": {"years": f"2015-2025 (+2026 assumed = 2025)", "cpi_2025_vs_2015": round(CPI[2025], 2)},
+    "rta_ridership": {"rows": int(len(rta)), "years": sorted(int(y) for y in rta.year.unique()),
+                      "stations_with_a_figure": len(RIDERS), "matched_to_station_codes": int(rta.station_code.notna().sum())},
+    "freehold_2006": {"areas_listed": int(len(fh)), "matched_to_communities": len(FREEHOLD_2006),
+                      "not_matched": fh[fh.comm_num.isna()].area_as_written.tolist()},
+}
+print("outside data:", external_log)
 
 # ---------------------------------------------------------------- anomalies worth reporting
 wd = tx[tx.year.between(2015, 2021)].date.dt.dayofweek.value_counts().reindex(range(7), fill_value=0)
@@ -301,8 +327,10 @@ for pk, (y0, y1) in PERIODS.items():
 
 comm_names = {k: {"name": comm_info[k]["name"], "known": KNOWN.get(k, (comm_info[k]["name"], ""))[0]}
               for k in comm_info}
+for st in stations_out:
+    st["riders"] = RIDERS.get(st["code"])          # {year: million riders} or None (not published)
 json.dump({"stations": stations_out, "dubai": dubai_stats, "venueCats": CATS, "segs": SEG_ORDER,
-           "logBins": [round(x, 4) for x in LOG_BINS], "comms": comm_names},
+           "logBins": [round(x, 4) for x in LOG_BINS], "comms": comm_names, "freehold2006": FREEHOLD_2006},
           open(OUT / "vis1_stations.json", "w"), separators=(",", ":"))
 
 # ======================================================== VIS 2: community trajectories
@@ -320,30 +348,32 @@ def trajectory(df):
         n = len(d)
         out.append({"y": y, "n": n, "nA": round(n * (ANNUALISE_2026 if y == 2026 else 1), 1),
                     "med": round(float(d.meter_sale_price.median())) if n >= 5 else None,
+                    "medR": round(float(d.mps_real.median())) if n >= 5 else None,     # 2015 AED
                     "op": round(float(d.offplan.mean()), 3) if n >= 5 else None})
     return out
 
 
 for k in vis2_comms:
     d = s[s.comm_num == k]
-    base = d[d.year.between(*BASE)].meter_sale_price.values
-    now = d[d.year.between(*NOW)].meter_sale_price.values
     rec = {"c": int(k), "name": comm_info[k]["name"], "known": KNOWN.get(k, (comm_info[k]["name"], ""))[0],
            "short": KNOWN.get(k, ("", comm_info[k]["name"][:4].upper()))[1],
            "lat": comm_info[k]["lat"], "lon": comm_info[k]["lon"], "n": int(len(d)), "traj": trajectory(d)}
-    # level: recent median AED/m2 + 90% bootstrap CI (relative half-width = uncertainty)
-    if len(now) >= 5:
-        bm = boot_median(now)
-        lo, hi = np.quantile(bm, [0.05, 0.95])
-        rec["level"] = {"v": round(float(np.median(now))), "lo": round(float(lo)), "hi": round(float(hi)),
-                        "u": round(float((hi - lo) / 2 / np.median(now)), 3), "n": int(len(now))}
-    # growth: median(2024-26)/median(2018-20)-1 with bootstrap CI
-    if len(base) >= 8 and len(now) >= 8:
-        g = boot_median(now) / boot_median(base) - 1
-        lo, hi = np.quantile(g, [0.05, 0.95])
-        rec["growth"] = {"v": round(float(np.median(now) / np.median(base) - 1), 3),
-                         "lo": round(float(lo), 3), "hi": round(float(hi), 3),
-                         "u": round(float((hi - lo) / 2), 3), "nb": int(len(base)), "nn": int(len(now))}
+    for col, suffix in (("meter_sale_price", ""), ("mps_real", "R")):      # nominal and inflation-adjusted
+        base = d[d.year.between(*BASE)][col].values
+        now = d[d.year.between(*NOW)][col].values
+        # level: recent median AED/m2 + 90% bootstrap CI (relative half-width = uncertainty)
+        if len(now) >= 5:
+            bm = boot_median(now)
+            lo, hi = np.quantile(bm, [0.05, 0.95])
+            rec["level" + suffix] = {"v": round(float(np.median(now))), "lo": round(float(lo)), "hi": round(float(hi)),
+                                     "u": round(float((hi - lo) / 2 / np.median(now)), 3), "n": int(len(now))}
+        # growth: median(2024-26)/median(2018-20)-1 with bootstrap CI
+        if len(base) >= 8 and len(now) >= 8:
+            g = boot_median(now) / boot_median(base) - 1
+            lo, hi = np.quantile(g, [0.05, 0.95])
+            rec["growth" + suffix] = {"v": round(float(np.median(now) / np.median(base) - 1), 3),
+                                      "lo": round(float(lo), 3), "hi": round(float(hi), 3),
+                                      "u": round(float((hi - lo) / 2), 3), "nb": int(len(base)), "nn": int(len(now))}
     # off-plan share 2024-26 with Wilson interval
     dn = d[d.year.between(*NOW)]
     if len(dn) >= 5:
@@ -358,7 +388,7 @@ for k in vis2_comms:
 
 all_traj = trajectory(s)
 json.dump({"comms": traj, "dubai": all_traj, "years": YEARS, "base": BASE, "now": NOW,
-           "annualise2026": round(ANNUALISE_2026, 4)},
+           "annualise2026": round(ANNUALISE_2026, 4), "cpi": {str(y): round(v, 2) for y, v in CPI.items()}},
           open(OUT / "vis2_trajectories.json", "w"), separators=(",", ":"))
 
 # ======================================================== VIS 3: ranker
@@ -377,13 +407,12 @@ rank_comms = []
 for k in vis3_comms:
     ci = comm_info[k]
     dmin, best = min((hav(ci["lat"], ci["lon"], la, lo), (c, nm)) for la, lo, c, nm in metro_pts)
-    gr = next((t.get("growth") for t in traj if t["c"] == k), None)
-    if gr is None:  # communities under the vis2 threshold: compute growth here too
-        d = s[s.comm_num == k]
-        base = d[d.year.between(*BASE)].meter_sale_price.values
-        now = d[d.year.between(*NOW)].meter_sale_price.values
-        if len(base) >= 8 and len(now) >= 8:
-            gr = {"v": round(float(np.median(now) / np.median(base) - 1), 3)}
+    d = s[s.comm_num == k]
+
+    def growth_of(col):
+        base = d[d.year.between(*BASE)][col].values
+        now = d[d.year.between(*NOW)][col].values
+        return round(float(np.median(now) / np.median(base) - 1), 3) if len(base) >= 8 and len(now) >= 8 else None
     rank_comms.append({
         "c": int(k), "name": ci["name"], "known": KNOWN.get(k, (ci["name"], ""))[0],
         "lat": ci["lat"], "lon": ci["lon"], "km2": round(ci["km2"], 2),
@@ -393,7 +422,9 @@ for k in vis3_comms:
         "venues": int(venue_n.get(k, 0)), "venueCap": bool(venue_n.get(k, 0) >= 100),
         "food": int(venue_food.get(k, 0)),
         "rating": None if pd.isna(venue_rating.get(k, np.nan)) else round(float(venue_rating.get(k)), 2),
-        "growth": None if gr is None else gr["v"],
+        "growth": growth_of("meter_sale_price"),          # nominal
+        "growthReal": growth_of("mps_real"),              # after UAE inflation (World Bank CPI)
+        "freehold2006": int(k) in FREEHOLD_2006,
     })
 # transaction-level recent sales for live affordability: [comm, segIdx, price, m2, offplan, year]
 seg_idx = {k: i for i, k in enumerate(SEGS)}
@@ -405,7 +436,7 @@ json.dump({"comms": rank_comms, "segs": SEGS, "sales": rows, "period": NOW,
                           for route in ("Red", "Green", "Expo")}},
           open(OUT / "vis3_ranker.json", "w"), separators=(",", ":"))
 
-json.dump({"cleaning": log, "anomalies": anomalies, "rules": CLEANING.strip().splitlines()},
+json.dump({"cleaning": log, "anomalies": anomalies, "rules": CLEANING.strip().splitlines(), "external": external_log},
           open(OUT / "cleaning_log.json", "w"), indent=1, ensure_ascii=False)
 print("vis2 communities:", len(vis2_comms), " vis3 communities:", len(vis3_comms), " recent sales rows:", len(rows))
 for f in sorted(OUT.glob("*")):

@@ -1,0 +1,48 @@
+year,station_name_as_published,station_code,line,riders_million,source
+2019,Burjuman,R19,Red & Green (interchange),12.76,"https://rta.ae/wps/portal/rta/ae/home/news-and-media/all-news/NewsDetails/594m+riders+used+public+transport,+shared+mobility+and+taxis+in+2019"
+2019,Union,R18,Red & Green (interchange),10.6,"https://rta.ae/wps/portal/rta/ae/home/news-and-media/all-news/NewsDetails/594m+riders+used+public+transport,+shared+mobility+and+taxis+in+2019"
+2019,Al Rigga,R17,Red,9.64,"https://rta.ae/wps/portal/rta/ae/home/news-and-media/all-news/NewsDetails/594m+riders+used+public+transport,+shared+mobility+and+taxis+in+2019"
+2019,Burj Khalifa/Dubai Mall,R25,Red,7.89,"https://rta.ae/wps/portal/rta/ae/home/news-and-media/all-news/NewsDetails/594m+riders+used+public+transport,+shared+mobility+and+taxis+in+2019"
+2019,Dubai Multi-Commodities Centre,R37,Red,7.77,"https://rta.ae/wps/portal/rta/ae/home/news-and-media/all-news/NewsDetails/594m+riders+used+public+transport,+shared+mobility+and+taxis+in+2019"
+2019,Mall of the Emirates,R32,Red,7.55,"https://rta.ae/wps/portal/rta/ae/home/news-and-media/all-news/NewsDetails/594m+riders+used+public+transport,+shared+mobility+and+taxis+in+2019"
+2019,Deira City Centre,R16,Red,7.42,"https://rta.ae/wps/portal/rta/ae/home/news-and-media/all-news/NewsDetails/594m+riders+used+public+transport,+shared+mobility+and+taxis+in+2019"
+2019,Al Fahidi,G25,Green,7.83,"https://rta.ae/wps/portal/rta/ae/home/news-and-media/all-news/NewsDetails/594m+riders+used+public+transport,+shared+mobility+and+taxis+in+2019"
+2019,Baniyas,G21,Green,6.58,"https://rta.ae/wps/portal/rta/ae/home/news-and-media/all-news/NewsDetails/594m+riders+used+public+transport,+shared+mobility+and+taxis+in+2019"
+2019,Stadium,G15,Green,5.74,"https://rta.ae/wps/portal/rta/ae/home/news-and-media/all-news/NewsDetails/594m+riders+used+public+transport,+shared+mobility+and+taxis+in+2019"
+2019,Oud Metha,G27,Green,4.99,"https://rta.ae/wps/portal/rta/ae/home/news-and-media/all-news/NewsDetails/594m+riders+used+public+transport,+shared+mobility+and+taxis+in+2019"
+2019,Salahuddin,G19,Green,4.95,"https://rta.ae/wps/portal/rta/ae/home/news-and-media/all-news/NewsDetails/594m+riders+used+public+transport,+shared+mobility+and+taxis+in+2019"
+2022,Burjuman,R19,Red & Green (interchange),13,https://www.mediaoffice.ae/en/news/2023/February/26-02/rta
+2022,Union,R18,Red & Green (interchange),10.8,https://www.mediaoffice.ae/en/news/2023/February/26-02/rta
+2022,Al Rigga,R17,Red,9.9,https://www.mediaoffice.ae/en/news/2023/February/26-02/rta
+2022,Mall of the Emirates,R32,Red,9.6,https://www.mediaoffice.ae/en/news/2023/February/26-02/rta
+2022,Burj Khalifa/Dubai Mall,R25,Red,8.8,https://www.mediaoffice.ae/en/news/2023/February/26-02/rta
+2022,Business Bay,R26,Red,8.5,https://www.mediaoffice.ae/en/news/2023/February/26-02/rta
+2022,Sharaf DG (ex Al Fahidi),G25,Green,7.7,https://www.mediaoffice.ae/en/news/2023/February/26-02/rta
+2022,Baniyas,G21,Green,7.3,https://www.mediaoffice.ae/en/news/2023/February/26-02/rta
+2022,Stadium,G15,Green,5.6,https://www.mediaoffice.ae/en/news/2023/February/26-02/rta
+2022,Salah Al Din,G19,Green,5.3,https://www.mediaoffice.ae/en/news/2023/February/26-02/rta
+2022,Al Ghubaiba,G24,Green,4.9,https://www.mediaoffice.ae/en/news/2023/February/26-02/rta
+2023,Burjuman,R19,Red & Green (interchange),15,https://mediaoffice.ae/en/news/2024/february/18-02/702-million-riders-used-public-transport
+2023,Union,R18,Red & Green (interchange),11.9,https://mediaoffice.ae/en/news/2024/february/18-02/702-million-riders-used-public-transport
+2023,Al Rigga,R17,Red,11.7,https://mediaoffice.ae/en/news/2024/february/18-02/702-million-riders-used-public-transport
+2023,Mall of the Emirates,R32,Red,11,https://mediaoffice.ae/en/news/2024/february/18-02/702-million-riders-used-public-transport
+2023,Burj Khalifa/Dubai Mall,R25,Red,10,https://mediaoffice.ae/en/news/2024/february/18-02/702-million-riders-used-public-transport
+2023,Sharaf DG (ex Al Fahidi),G25,Green,9.3,https://mediaoffice.ae/en/news/2024/february/18-02/702-million-riders-used-public-transport
+2023,Baniyas,G21,Green,8.2,https://mediaoffice.ae/en/news/2024/february/18-02/702-million-riders-used-public-transport
+2023,Stadium,G15,Green,6.3,https://mediaoffice.ae/en/news/2024/february/18-02/702-million-riders-used-public-transport
+2024,BurJuman,R19,Red & Green (interchange),16.2,https://www.mediaoffice.ae/en/news/2025/february/02-02/747-million-riders-used-public-transport
+2024,Union,R18,Red & Green (interchange),12.9,https://www.mediaoffice.ae/en/news/2025/february/02-02/747-million-riders-used-public-transport
+2024,Al Rigga,R17,Red,13,https://www.mediaoffice.ae/en/news/2025/february/02-02/747-million-riders-used-public-transport
+2024,Mall of the Emirates,R32,Red,11.2,https://www.mediaoffice.ae/en/news/2025/february/02-02/747-million-riders-used-public-transport
+2024,Burj Khalifa/Dubai Mall,R25,Red,10.6,https://www.mediaoffice.ae/en/news/2025/february/02-02/747-million-riders-used-public-transport
+2024,Sharaf DG (ex Al Fahidi),G25,Green,9.9,https://www.mediaoffice.ae/en/news/2025/february/02-02/747-million-riders-used-public-transport
+2024,Baniyas,G21,Green,8.4,https://www.mediaoffice.ae/en/news/2025/february/02-02/747-million-riders-used-public-transport
+2024,Stadium,G15,Green,6.8,https://www.mediaoffice.ae/en/news/2025/february/02-02/747-million-riders-used-public-transport
+2025,BurJuman,R19,Red & Green (interchange),17.8,https://mediaoffice.ae/en/news/2026/february/15-02/rta-records-802-riders-in-dubai-2025
+2025,Al Rigga,R17,Red,13.8,https://mediaoffice.ae/en/news/2026/february/15-02/rta-records-802-riders-in-dubai-2025
+2025,Union,R18,Red,13.6,https://mediaoffice.ae/en/news/2026/february/15-02/rta-records-802-riders-in-dubai-2025
+2025,Mall of the Emirates,R32,Red,11.2,https://mediaoffice.ae/en/news/2026/february/15-02/rta-records-802-riders-in-dubai-2025
+2025,Burj Khalifa Dubai Mall,R25,Red,10.9,https://mediaoffice.ae/en/news/2026/february/15-02/rta-records-802-riders-in-dubai-2025
+2025,Sharaf DG (ex Al Fahidi),G25,Green,10.5,https://mediaoffice.ae/en/news/2026/february/15-02/rta-records-802-riders-in-dubai-2025
+2025,Baniyas Square,G21,Green,8.4,https://mediaoffice.ae/en/news/2026/february/15-02/rta-records-802-riders-in-dubai-2025
+2025,Stadium,G15,Green,7.5,https://mediaoffice.ae/en/news/2026/february/15-02/rta-records-802-riders-in-dubai-2025

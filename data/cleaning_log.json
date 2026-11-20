@@ -64,5 +64,36 @@
   "4. Price sanity: 1,000 <= AED/m2 <= 100,000, 15 <= size <= 5,000 m2,",
   "   price >= AED 100,000 (removes zero/symbolic and implausible values).",
   "5. Robust statistics only (medians, quantiles); bootstrap CIs for uncertainty."
- ]
+ ],
+ "external": {
+  "worldbank_cpi": {
+   "years": "2015-2025 (+2026 assumed = 2025)",
+   "cpi_2025_vs_2015": 113.16
+  },
+  "rta_ridership": {
+   "rows": 47,
+   "years": [
+    2019,
+    2022,
+    2023,
+    2024,
+    2025
+   ],
+   "stations_with_a_figure": 14,
+   "matched_to_station_codes": 47
+  },
+  "freehold_2006": {
+   "areas_listed": 23,
+   "matched_to_communities": 16,
+   "not_matched": [
+    "Emirates Hills 1",
+    "Emirates Hills 2",
+    "Emirates Hills 3",
+    "Jebel Ali",
+    "Al Rowyah",
+    "Sheikh Zayed Road",
+    "Nad al-Sheba"
+   ]
+  }
+ }
 }

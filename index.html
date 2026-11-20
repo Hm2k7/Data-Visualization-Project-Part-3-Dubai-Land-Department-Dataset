@@ -37,7 +37,7 @@
     <div>
       <div class="kicker">CS333 Introduction to Data Visualization · Project Part 3 · Group 3</div>
       <h1 style="font-size:34px">Dubai real estate, three new ways to look at it</h1>
-      <p class="lede" style="margin-bottom:0">Three interactive D3 visualizations built on the Dubai Land Department transactions (10% sample), combined with the course's community boundaries, metro stations, population and Foursquare venues. Each one answers a question that a <b>city planner</b>, an <b>investor/developer</b> or a <b>buyer</b> would ask, and none of them is a time-series line, a weekday bar chart or a choropleth like Parts 1 and 2.</p>
+      <p class="lede" style="margin-bottom:0">Three interactive D3 visualizations built on the Dubai Land Department transactions (10% sample), combined with the course's community boundaries, metro stations, population and Foursquare venues, plus three outside datasets from official sources (World Bank, RTA, Dubai Legislation Portal). Each one answers a question that a <b>city planner</b>, an <b>investor/developer</b> or a <b>buyer</b> would ask, and none of them is a time-series line, a weekday bar chart or a choropleth like Parts 1 and 2.</p>
     </div>
     <div class="team">Hassan Mousa (24000292) · Khalid Albadda (24000542) · Osama Mohammed (24001318)<br>Presentation slot: <b>[fill in your booked slot]</b></div>
   </div>
@@ -75,7 +75,16 @@
       <table class="q" id="atable"></table>
     </div>
     <div class="card">
-      <h2>Research behind the designs</h2>
+      <h2>Outside data (official sources)</h2>
+      <div class="sub">Files in <span class="num">data/external/</span>; full citations in <span class="num">data/external/SOURCES.md</span>.</div>
+      <table class="q">
+        <tr><th>Dataset</th><th>Source</th><th>Linked by</th><th>Used in</th></tr>
+        <tr><td>UAE consumer-price inflation 2014–2025</td><td><a href="https://api.worldbank.org/v2/country/ARE/indicator/FP.CPI.TOTL.ZG?format=json&date=2014:2025">World Bank WDI</a></td><td>year → prices in 2015 AED</td><td>Vis 2 real prices; Vis 3 momentum</td></tr>
+        <tr><td>Annual riders per metro station (2019, 2022–25)</td><td>RTA / <a href="https://mediaoffice.ae/en/news/2026/february/15-02/rta-records-802-riders-in-dubai-2025">Dubai Media Office</a> press releases</td><td>station code (14 stations, renames mapped)</td><td>Vis 1 "RTA riders"</td></tr>
+        <tr><td>Original 23 freehold areas</td><td><a href="https://dlp.dubai.gov.ae/Legislation%20Reference/2006/Regulation%20No.%20%283%29%20of%202006.html">Regulation No. 3 of 2006</a>, Dubai Legislation Portal</td><td>community name (16 of 23 matched)</td><td>Vis 1 station map</td></tr>
+      </table>
+      <p class="sub" id="extnote" style="margin-top:8px"></p>
+      <h2 style="margin-top:16px">Research behind the designs</h2>
       <div class="sub">Each visualization adapts a published technique to this data.</div>
       <ol class="refs">
         <li>Wu, Niedermann, Takahashi, Roberts & Nöllenburg (2020). <i>A Survey on Transit Map Layout.</i> CGF / EuroVis STAR: schematic transit maps → Vis 1 strip map.</li>
@@ -106,6 +115,7 @@ d3.json("data/cleaning_log.json").then(L => {
     ["Stations without sales", a.stations_with_zero_transactions.join("; ") + "."],
     ["Partial 2026", `Data ends 17 Sep 2026; yearly volumes for 2026 are annualised ×${a.annualise_2026.toFixed(3)} and drawn hollow.`],
     ["Venue cap", "dubai_venues.csv holds at most 100 venues per community, so we show 100+ and use ranks, not counts."]];
+  if (L.external) d3.select("#extnote").text(`Prices rose ${Math.round(L.external.worldbank_cpi.cpi_2025_vs_2015 - 100)}% in the UAE from 2015 to 2025, so part of any price growth is inflation. ${L.external.rta_ridership.stations_with_a_figure} stations have published ridership; ${L.external.freehold_2006.matched_to_communities} of ${L.external.freehold_2006.areas_listed} freehold areas matched a community.`);
   d3.select("#atable").selectAll("tr").data(rows).join("tr").html(d => `<td style="width:170px"><b>${d[0]}</b></td><td>${d[1]}</td>`);
 });
 </script>

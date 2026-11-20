@@ -88,7 +88,7 @@
         <li>Click a row to open its budget check.</li></ul></div>
       <div><h3>Data</h3><ul>
         <li><b>Budget fit, Value (median AED/m²), Liquidity (number of sales), Ready share</b>: clean residential sales 2024 to Sep 2026 of the chosen home type. Communities with fewer than 10 such sales (10% sample) are listed but not ranked.</li>
-        <li><b>Momentum</b>: growth of median AED/m², 2018–20 → 2024–26 (all homes).</li>
+        <li><b>Momentum</b>: <i>real</i> growth of median AED/m², 2018–20 → 2024–26 (all homes): each sale is first divided by the UAE consumer price index of its year (World Bank, outside data), so momentum is growth beyond inflation.</li>
         <li><b>Metro access</b>: straight-line km from the community centroid (<span class="num">dubai.geojson</span>) to the nearest of the 56 stations in <span class="num">dubai_metro_stations.geojson</span>.</li>
         <li><b>Amenities</b>: Foursquare venues in <span class="num">dubai_venues.csv</span>. The file caps a community at 100 venues, so "100+" communities are tied at the top.</li>
         <li><b>Established</b>: residents per km² in 2019 (<span class="num">dubai.geojson</span> population).</li></ul></div>
@@ -105,7 +105,7 @@ const COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300"
 const CRIT = [
   { k: "fit",    name: "Budget fit",   hint: "share of sales ≤ budget", fmt: v => pct0(v), higher: true, raw: true },
   { k: "value",  name: "Value",        hint: "low median AED/m²",      fmt: v => fmt(v) + "/m²", higher: false },
-  { k: "growth", name: "Momentum",     hint: "price growth since 2018–20", fmt: v => pctS(v), higher: true },
+  { k: "growth", name: "Momentum",     hint: "real price growth since 2018–20 (after inflation)", fmt: v => pctS(v) + " real", higher: true },
   { k: "liq",    name: "Liquidity",    hint: "many recent sales",       fmt: v => fmt(v) + " sales", higher: true },
   { k: "ready",  name: "Ready / Off-plan", hint: "share matching your preference", fmt: v => pct0(v), higher: true },
   { k: "metro",  name: "Metro access", hint: "km to nearest station",   fmt: v => v.toFixed(1) + " km", higher: false },
@@ -163,7 +163,7 @@ Promise.all([d3.json("../data/vis3_ranker.json"), d3.json("../data/communities.g
       c.raw = {
         fit: ss.length ? ss.filter(x => x.price <= state.budget).length / ss.length : null,
         value: ss.length ? d3.median(ss, x => x.price / x.m2) : null,
-        growth: c.growth, liq: ss.length,
+        growth: c.growthReal, liq: ss.length,      // inflation-adjusted with the World Bank UAE CPI (outside data)
         ready: ss.length ? (state.pref === "ready" ? 1 - d3.mean(ss, x => x.op) : d3.mean(ss, x => x.op)) : null,
         metro: c.metroKm, amen: c.venues, estab: c.density };
       c.ranked = c.n >= 10;   // too few sales of this type -> listed, not ranked
@@ -282,7 +282,7 @@ Promise.all([d3.json("../data/vis3_ranker.json"), d3.json("../data/communities.g
     if (!d.ranked) return h + `<div class="t-note">Fewer than 10 sales of this home type, so not ranked.</div>`;
     CRIT.forEach((cr, i) => { const v = d.raw[cr.k];
       h += `<div class="t-row"><span><span class="sw2" style="background:${COLORS[i]}"></span>${cr.name}</span><span>${v == null ? "unknown" : cr.fmt(v, d)} · ${Math.round(d.s[cr.k].v * 100)}</span></div>`; });
-    return h + `<div class="t-note">Score ${Math.round(d.score * 100)} / 100. Nearest station: ${d.metro}.</div>`;
+    return h + `<div class="t-note">Score ${Math.round(d.score * 100)} / 100. Nearest station: ${d.metro}.${d.growth != null ? ` Nominal growth ${pctS(d.growth)}.` : ""}</div>`;
   }
 
   // ---------------------------------------------------------- map
