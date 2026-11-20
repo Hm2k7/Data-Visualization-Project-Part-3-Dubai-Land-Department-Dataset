@@ -7,7 +7,7 @@ course's community boundaries, metro stations, population and Foursquare venues.
 |---|---|---|---|
 | 1 | **Along the Line**: metro/tram strip map with price glyphs + station profile | `vis1-metro/` | Hassan Mousa |
 | 2 | **Boom Paths**: VSUP grid map + connected scatterplot | `vis2-trajectories/` | Khalid Albadda |
-| 3 | **Where Should I Buy?**: LineUp-style ranker + map + budget dot plot | `vis3-ranker/` | Osama Mohammed |
+| 3 | **Where Should I Buy?**: LineUp-style ranker + map + budget dot plot | `vis3-ranker/` | Osama Mohammed 24001318|
 
 ## Folder layout
 
