@@ -47,21 +47,21 @@
       <img src="assets/thumb1.png" alt="Strip map of the Red line, tram and Green line with price glyphs above each station">
       <div class="body"><div class="kicker">Visualization 1 · city planners</div>
         <h2>Along the Line</h2>
-        <p>Every metro and tram station as a schematic strip map with a price glyph, sales volume and venue mix, linked to a station profile (histogram, waffle and geographic catchment map).</p>
-        <div class="tags"><span class="tag">strip map</span><span class="tag">box glyphs</span><span class="tag">texture</span><span class="tag">brushing</span><span class="tag">linked views ×4</span></div>
+        <p>Every metro and tram station as a vertical line diagram: a dot for the typical price, a bar for homes sold or RTA riders. Clickable findings and a station profile with a catchment map.</p>
+        <div class="tags"><span class="tag">line diagram</span><span class="tag">dot + range</span><span class="tag">brushing</span><span class="tag">outside data: RTA</span><span class="tag">linked views ×4</span></div>
         <div class="who">Owner: Hassan Mousa</div></div></a>
     <a class="vcard" href="vis2-trajectories/index.html">
       <img src="assets/thumb2.png" alt="Grid map of communities with sparklines and VSUP colours next to a connected scatterplot">
       <div class="body"><div class="kicker">Visualization 2 · investors & developers</div>
         <h2>Boom Paths</h2>
-        <p>A grid map of 54 communities whose colour suppresses unreliable values (VSUP), linked to connected scatterplots that trace each community through the 2015–2026 cycle.</p>
-        <div class="tags"><span class="tag">grid map</span><span class="tag">VSUP uncertainty</span><span class="tag">connected scatterplot</span><span class="tag">animation</span></div>
+        <p>A grid map of 54 communities coloured above or below the Dubai average, fading to grey when the sample is too small (VSUP), linked to connected scatterplots and a plain price line.</p>
+        <div class="tags"><span class="tag">grid map</span><span class="tag">diverging VSUP</span><span class="tag">connected scatterplot</span><span class="tag">real prices</span></div>
         <div class="who">Owner: Khalid Albadda</div></div></a>
     <a class="vcard" href="vis3-ranker/index.html">
       <img src="assets/thumb3.png" alt="LineUp-style ranking table with stacked score bars, a map of the top 10 and a dot plot of prices">
       <div class="body"><div class="kicker">Visualization 3 · buyers</div>
         <h2>Where Should I Buy?</h2>
-        <p>A LineUp-style multi-criteria ranking with weight sliders and personas, linked to a top-10 map and a unit dot plot that checks every recent sale against your budget.</p>
+        <p>A LineUp-style ranking with weight sliders and personas that answers in one sentence and says why in plain words, linked to a top-10 map and a dot plot of every recent sale against your budget.</p>
         <div class="tags"><span class="tag">LineUp ranking</span><span class="tag">stacked scores</span><span class="tag">unit dot plot</span><span class="tag">what-if</span></div>
         <div class="who">Owner: Osama Mohammed</div></div></a>
   </div>
@@ -79,9 +79,9 @@
       <div class="sub">Files in <span class="num">data/external/</span>; full citations in <span class="num">data/external/SOURCES.md</span>.</div>
       <table class="q">
         <tr><th>Dataset</th><th>Source</th><th>Linked by</th><th>Used in</th></tr>
-        <tr><td>UAE consumer-price inflation 2014–2025</td><td><a href="https://api.worldbank.org/v2/country/ARE/indicator/FP.CPI.TOTL.ZG?format=json&date=2014:2025">World Bank WDI</a></td><td>year → prices in 2015 AED</td><td>Vis 2 real prices; Vis 3 momentum</td></tr>
-        <tr><td>Annual riders per metro station (2019, 2022–25)</td><td>RTA / <a href="https://mediaoffice.ae/en/news/2026/february/15-02/rta-records-802-riders-in-dubai-2025">Dubai Media Office</a> press releases</td><td>station code (14 stations, renames mapped)</td><td>Vis 1 "RTA riders"</td></tr>
-        <tr><td>Original 23 freehold areas</td><td><a href="https://dlp.dubai.gov.ae/Legislation%20Reference/2006/Regulation%20No.%20%283%29%20of%202006.html">Regulation No. 3 of 2006</a>, Dubai Legislation Portal</td><td>community name (16 of 23 matched)</td><td>Vis 1 station map</td></tr>
+        <tr><td>UAE consumer-price inflation 2014–2025</td><td><a href="https://data.worldbank.org/indicator/FP.CPI.TOTL.ZG?locations=AE" target="_blank" rel="noopener">World Bank Open Data</a></td><td>year → prices in 2015 AED</td><td>Vis 2 real prices; Vis 3 momentum</td></tr>
+        <tr><td>Annual riders per metro station (2019, 2022–25)</td><td>RTA / <a href="https://mediaoffice.ae/en/news/2026/february/15-02/rta-records-802-riders-in-dubai-2025" target="_blank" rel="noopener">Dubai Media Office</a> press releases</td><td>station code (14 stations, renames mapped)</td><td>Vis 1 "RTA riders"</td></tr>
+        <tr><td>Original 23 freehold areas</td><td><a href="https://dlp.dubai.gov.ae/Legislation%20Reference/2006/Regulation%20No.%20(3)%20of%202006%20Concerning%20determining%20the%20areas%20of%20ownership%20of%20real%20estate.pdf" target="_blank" rel="noopener">Regulation No. 3 of 2006</a> (official PDF), <a href="https://dlp.dubai.gov.ae/en/Pages/LegislationSearch.aspx" target="_blank" rel="noopener">Dubai Legislation Portal</a></td><td>community name (16 of 23 matched)</td><td>Vis 1 station map</td></tr>
       </table>
       <p class="sub" id="extnote" style="margin-top:8px"></p>
       <h2 style="margin-top:16px">Research behind the designs</h2>

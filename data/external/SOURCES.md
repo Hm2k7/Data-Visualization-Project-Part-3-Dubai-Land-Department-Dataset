@@ -6,8 +6,10 @@ data so `prep/prepare_data.py` can read them. Retrieved 20 November 2026.
 ## 1. `worldbank_uae_inflation.csv`: UAE consumer-price inflation, 2014–2025
 
 - **Source:** World Bank, World Development Indicators, indicator `FP.CPI.TOTL.ZG` ("Inflation, consumer prices
-  (annual %)"), United Arab Emirates. API: https://api.worldbank.org/v2/country/ARE/indicator/FP.CPI.TOTL.ZG?format=json&date=2014:2025
-  (last updated 2026-07-13). The 2008–2023 values match the mirror at https://github.com/datasets/cpi.
+  (annual %)"), United Arab Emirates.
+  - Open it in a browser (chart, table, CSV/Excel download): https://data.worldbank.org/indicator/FP.CPI.TOTL.ZG?locations=AE
+  - The same numbers as raw data (what the prep script used): https://api.worldbank.org/v2/country/ARE/indicator/FP.CPI.TOTL.ZG?format=json&date=2014:2025
+    (last updated 2026-07-13). The 2008–2023 values match the mirror at https://github.com/datasets/cpi.
 - **How it is linked:** by **year**. The prep script chains the yearly rates into a price index (2015 = 100, so
   2025 = 113.2) and divides every sale's AED/m² by the index of its year, giving prices in 2015 dirhams.
   There is no 2026 figure yet, so 2026 uses the 2025 level.
@@ -35,8 +37,12 @@ data so `prep/prepare_data.py` can read them. Retrieved 20 November 2026.
 ## 3. `dubai_freehold_areas_2006.csv`: the original freehold areas
 
 - **Source:** Regulation No. (3) of 2006 Determining Areas for Ownership by Non-UAE Nationals of Real Property in the
-  Emirate of Dubai, issued 7 June 2006, Article (3), Dubai Legislation Portal:
-  https://dlp.dubai.gov.ae/Legislation%20Reference/2006/Regulation%20No.%20%283%29%20of%202006.html
+  Emirate of Dubai, issued 7 June 2006, Article (3), published by the Supreme Legislation Committee:
+  - Official document (PDF): https://dlp.dubai.gov.ae/Legislation%20Reference/2006/Regulation%20No.%20(3)%20of%202006%20Concerning%20determining%20the%20areas%20of%20ownership%20of%20real%20estate.pdf
+  - Dubai Legislation Portal search (search "Regulation No. (3) of 2006"): https://dlp.dubai.gov.ae/en/Pages/LegislationSearch.aspx
+  - Text version: https://dlp.dubai.gov.ae/Legislation%20Reference/2006/Regulation%20No.%20%283%29%20of%202006.html
+  The regulation itself is a numbered list of 23 areas with their land-plot numbers, so the plot
+  numbers you see in it are expected.
 - **How it is linked:** by **community name** to `CNAME_E` / `COMM_NUM` in `dubai.geojson`. 16 of the 23 areas
   match (e.g. "Dubai Marina" = MARSA DUBAI, "Palm Jumairah" = NAKHLAT JUMEIRA). 7 do not: Emirates Hills 1–3,
   Jebel Ali, Al Rowyah, Sheikh Zayed Road and Nad al-Sheba. Either the name is not a community in the file, or the

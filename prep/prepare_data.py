@@ -387,8 +387,14 @@ for k in vis2_comms:
     traj.append(rec)
 
 all_traj = trajectory(s)
+# Dubai-wide reference values (the colour scale in Vis 2 is centred on these)
+ref = {}
+for col, suffix in (("meter_sale_price", ""), ("mps_real", "R")):
+    b_ = s[s.year.between(*BASE)][col].median(); n_ = s[s.year.between(*NOW)][col].median()
+    ref["level" + suffix] = round(float(n_)); ref["growth" + suffix] = round(float(n_ / b_ - 1), 3)
+ref["offplan"] = round(float(s[s.year.between(*NOW)].offplan.mean()), 3)
 json.dump({"comms": traj, "dubai": all_traj, "years": YEARS, "base": BASE, "now": NOW,
-           "annualise2026": round(ANNUALISE_2026, 4), "cpi": {str(y): round(v, 2) for y, v in CPI.items()}},
+           "annualise2026": round(ANNUALISE_2026, 4), "cpi": {str(y): round(v, 2) for y, v in CPI.items()}, "ref": ref},
           open(OUT / "vis2_trajectories.json", "w"), separators=(",", ":"))
 
 # ======================================================== VIS 3: ranker

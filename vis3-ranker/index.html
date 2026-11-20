@@ -31,6 +31,9 @@
   .budget input { width: 200px; }
   .budget .num { font-weight: 500; min-width: 86px; display: inline-block; }
   .big { font-size: 18px; font-family: var(--mono); font-weight: 500; }
+  .answer { font-size: 19px; color: var(--text-primary); margin-bottom: 4px; }
+  .answer b { background: #fff6d6; padding: 0 4px; border-radius: 4px; }
+  .why { font-size: 11.5px; fill: var(--text-secondary); }
   .toggle-all { font: inherit; font-size: 12px; border: 0; background: none; color: var(--accent); cursor: pointer; padding: 6px 0; }
 </style>
 </head>
@@ -38,7 +41,8 @@
 <div class="page">
   <div class="crumbs"><a href="../index.html">CS333 Part 3 · Group 3</a> / Visualization 3</div>
   <h1>Where should I buy? Rank Dubai's communities by what matters to <i>you</i></h1>
-  <p class="lede">A LineUp-style ranking (Gratzl et al., InfoVis 2013): choose a home type, a budget and how much each criterion matters. Each community's score is a stacked bar, so you can see <i>why</i> it ranks where it does. Rows move as you change the weights. The map shows the current top 10, and clicking a row shows every recent sale there against your budget.</p>
+  <p class="lede answer" id="answer"></p>
+  <p class="lede" style="font-size:14px">Pick a home type and budget, or a ready-made persona. Each row's bar shows its score, built from coloured pieces, one per criterion, so you can see <i>why</i> it ranks there. Click a row to check every recent sale against your budget.</p>
 
   <div class="controls">
     <div><label class="title">Home type</label><span class="seg" data-key="seg" id="segbtns"></span></div>
@@ -77,6 +81,8 @@
         <li><b>Row order</b>: rank by weighted score (or by one criterion if you click its column header).</li>
         <li><b>Stacked bar</b>: total length = score (0–100); each coloured segment = weight × criterion score, so its length shows that criterion's contribution. Colour = criterion (8 fixed colours, same order everywhere).</li>
         <li><b>Criterion columns</b>: bar length = the community's percentile among the ranked communities (budget fit = raw share within budget). Hatched = unknown, counted as average.</li>
+        <li><b>Strongest reasons</b>: the two criteria contributing most to the score (only if the community is in the top 40% on them), written in plain words.</li>
+        <li><b>Headline sentence</b>: rewritten live from the current top 3 and budget.</li>
         <li><b>▲▼</b> beside the rank: how many places the row moved after your last change.</li>
         <li><b>Map</b>: numbered circles at community centroids (position), metro lines in their line colours.</li>
         <li><b>Budget check</b>: a unit dot plot. Each dot = 1 (or k) recent sales, x = price (log scale), colour = ready vs off-plan, vertical rule = your budget.</li></ul></div>
@@ -88,7 +94,7 @@
         <li>Click a row to open its budget check.</li></ul></div>
       <div><h3>Data</h3><ul>
         <li><b>Budget fit, Value (median AED/m²), Liquidity (number of sales), Ready share</b>: clean residential sales 2024 to Sep 2026 of the chosen home type. Communities with fewer than 10 such sales (10% sample) are listed but not ranked.</li>
-        <li><b>Momentum</b>: <i>real</i> growth of median AED/m², 2018–20 → 2024–26 (all homes): each sale is first divided by the UAE consumer price index of its year (World Bank, outside data), so momentum is growth beyond inflation.</li>
+        <li><b>Momentum</b>: <i>real</i> growth of median AED/m², 2018–20 → 2024–26 (all homes): each sale is first divided by the UAE consumer price index of its year (<a href="https://data.worldbank.org/indicator/FP.CPI.TOTL.ZG?locations=AE" target="_blank" rel="noopener">World Bank</a>, outside data), so momentum is growth beyond inflation.</li>
         <li><b>Metro access</b>: straight-line km from the community centroid (<span class="num">dubai.geojson</span>) to the nearest of the 56 stations in <span class="num">dubai_metro_stations.geojson</span>.</li>
         <li><b>Amenities</b>: Foursquare venues in <span class="num">dubai_venues.csv</span>. The file caps a community at 100 venues, so "100+" communities are tied at the top.</li>
         <li><b>Established</b>: residents per km² in 2019 (<span class="num">dubai.geojson</span> population).</li></ul></div>
@@ -193,8 +199,12 @@ Promise.all([d3.json("../data/vis3_ranker.json"), d3.json("../data/communities.g
 
   // ---------------------------------------------------------- ranking table (LineUp-style)
   const RH = 23, HEAD = 46;
-  const COL = { rank: 0, name: 66, score: 262, attrs: 520 }, SW = 226, AW = 54;
-  const TW = COL.attrs + CRIT.length * (AW + 6);
+  const COL = { rank: 0, name: 58, score: 226, why: 392, attrs: 584 }, SW = 128, AW = 39, AG = 6;
+  const TW = COL.attrs + CRIT.length * (AW + AG);
+  // plain-language reasons: the criteria that contribute most to a row's score
+  const REASON = { fit: "fits budget", value: "good value", growth: "rising prices", liq: "easy resale",
+                   ready: () => state.pref === "ready" ? "mostly ready" : "mostly off-plan", metro: "near metro", amen: "lots nearby", estab: "established" };
+  const reasonOf = k => typeof REASON[k] === "function" ? REASON[k]() : REASON[k];
   const table = d3.select("#table").attr("width", TW);
   const defs = table.append("defs");
   const hp = defs.append("pattern").attr("id", "hatch").attr("patternUnits", "userSpaceOnUse").attr("width", 4).attr("height", 4).attr("patternTransform", "rotate(45)");
@@ -206,24 +216,25 @@ Promise.all([d3.json("../data/vis3_ranker.json"), d3.json("../data/communities.g
   function drawHead() {
     head.selectAll("*").remove();
     head.append("text").attr("x", 4).attr("y", HEAD - 8).attr("font-size", 11).text("Rank");
-    head.append("text").attr("x", COL.name).attr("y", HEAD - 8).attr("font-size", 11).text("Community (market name)");
+    head.append("text").attr("x", COL.name).attr("y", HEAD - 8).attr("font-size", 11).text("Community");
+    head.append("text").attr("x", COL.why).attr("y", HEAD - 8).attr("font-size", 11).text("Strongest reasons");
     const sh = head.append("g").attr("class", "colhead" + (state.sortBy === "score" ? " on" : "")).on("click", () => { state.sortBy = "score"; update(); });
-    sh.append("text").attr("x", COL.score).attr("y", HEAD - 8).text("Score ▾ (stacked by criterion)");
+    sh.append("text").attr("x", COL.score).attr("y", HEAD - 8).text("Score ▾ (out of 100)");
     // mini weight bar above the score column
     let acc = 0; const W = d3.sum(state.w) || 1;
     state.w.forEach((w, i) => { if (!w) return; head.append("rect").attr("x", COL.score + sx(acc / W)).attr("y", 8).attr("height", 8).attr("rx", 2)
       .attr("width", Math.max(0, sx(w / W) - 2)).attr("fill", COLORS[i]); acc += w; });
-    head.append("text").attr("x", COL.score - 6).attr("y", 15).attr("text-anchor", "end").attr("font-size", 10).attr("fill", "var(--text-muted)").text("your weights");
+    head.append("text").attr("x", COL.score - 6).attr("y", 15).attr("text-anchor", "end").attr("font-size", 10).attr("fill", "var(--text-muted)").text("weights");
     CRIT.forEach((cr, i) => {
-      const g = head.append("g").attr("class", "colhead" + (state.sortBy === cr.k ? " on" : "")).attr("transform", `translate(${COL.attrs + i * (AW + 6)},0)`)
+      const g = head.append("g").attr("class", "colhead" + (state.sortBy === cr.k ? " on" : "")).attr("transform", `translate(${COL.attrs + i * (AW + AG)},0)`)
         .on("click", () => { state.sortBy = cr.k; update(); })
         .on("mouseenter", ev => showTip(ev, `<div class="t-title">${cr.name}</div><div class="t-note">${cr.hint}. Click to rank by this criterion alone.</div>`))
         .on("mousemove", moveTip).on("mouseleave", hideTip);
       g.append("rect").attr("y", 26).attr("width", AW).attr("height", 3).attr("rx", 1.5).attr("fill", COLORS[i]).attr("opacity", state.w[i] ? 1 : .25);
-      const SHORT = { fit: "Budget", value: "Value", growth: "Momentum", liq: "Liquidity", ready: state.pref === "ready" ? "Ready" : "Off-plan",
-                      metro: "Metro", amen: "Amenities", estab: "Estab." };
-      g.append("text").attr("y", 14).attr("font-size", 10.5).text(SHORT[cr.k]);
-      g.append("text").attr("y", HEAD - 8).attr("font-size", 10).attr("fill", "var(--text-muted)").text(state.sortBy === cr.k ? "▾ sorted" : "");
+      const SHORT = { fit: "Budget", value: "Value", growth: "Growth", liq: "Resale", ready: state.pref === "ready" ? "Ready" : "Off-pl.",
+                      metro: "Metro", amen: "Places", estab: "Settled" };
+      g.append("text").attr("y", 14).attr("font-size", 10).text(SHORT[cr.k]);
+      g.append("text").attr("y", HEAD - 8).attr("font-size", 10).attr("fill", "var(--text-muted)").text(state.sortBy === cr.k ? "▾" : "");
     });
   }
 
@@ -242,6 +253,7 @@ Promise.all([d3.json("../data/vis3_ranker.json"), d3.json("../data/communities.g
     enter.append("text").attr("class", "nm").attr("x", COL.name).attr("y", 15.5);
     enter.append("g").attr("class", "stack").attr("transform", `translate(${COL.score},4)`);
     enter.append("text").attr("class", "sc num").attr("y", 15.5).attr("font-size", 11);
+    enter.append("text").attr("class", "why").attr("x", COL.why).attr("y", 15.5);
     enter.append("g").attr("class", "attrs");
     enter.on("mouseenter", (ev, d) => { state.hover = d.c; linkHover(); showTip(ev, rowTip(d)); })
       .on("mousemove", moveTip).on("mouseleave", () => { state.hover = null; linkHover(); hideTip(); })
@@ -255,7 +267,14 @@ Promise.all([d3.json("../data/vis3_ranker.json"), d3.json("../data/communities.g
       if (!d.rank || !d.prevRank || d.prevRank === d.rank) { t.text(""); return; }
       const up = d.prevRank > d.rank; t.text((up ? "▲" : "▼") + Math.abs(d.prevRank - d.rank)).attr("fill", up ? "#006300" : "#b8312f");
     });
-    all.select(".nm").text(d => d.known.length > 25 ? d.known.slice(0, 24) + "…" : d.known);
+    all.select(".nm").text(d => d.known.length > 24 ? d.known.slice(0, 23) + "…" : d.known);
+    all.select(".why").each(function (d) {
+      const t = d3.select(this).text(null);
+      if (!d.ranked) return;
+      const top = CRIT.map((cr, i) => ({ k: cr.k, i, p: d.parts[i], v: d.s[cr.k].v })).filter(o => o.p > 0 && o.v >= 0.6 && !d.s[o.k].missing)
+        .sort((a, b) => b.p - a.p).slice(0, 2);
+      top.forEach((o, j) => { t.append("tspan").attr("fill", COLORS[o.i]).text((j ? "  ● " : "● ")); t.append("tspan").text(reasonOf(o.k)); });
+    });
     all.select(".stack").each(function (d) {
       const g = d3.select(this);
       const parts = d.ranked ? d.parts : [];
@@ -271,7 +290,7 @@ Promise.all([d3.json("../data/vis3_ranker.json"), d3.json("../data/communities.g
       g.selectAll("g.cell").data(cells).join(e => { const c = e.append("g").attr("class", "cell");
           c.append("rect").attr("class", "track").attr("y", 5).attr("height", RH - 11).attr("rx", 2).attr("fill", "#f1f0ec").attr("width", AW);
           c.append("rect").attr("class", "bar").attr("y", 5).attr("height", RH - 11).attr("rx", 2).attr("width", 0); return c; })
-        .attr("transform", c => `translate(${COL.attrs + c.i * (AW + 6)},0)`)
+        .attr("transform", c => `translate(${COL.attrs + c.i * (AW + AG)},0)`)
         .each(function (c) { d3.select(this).select(".bar").attr("fill", c.s && c.s.missing ? "url(#hatch)" : COLORS[c.i])
             .attr("opacity", state.w[c.i] ? 1 : .3).transition(T).attr("width", c.s ? Math.max(1.5, c.s.v * AW) : 0); });
     });
@@ -316,6 +335,12 @@ Promise.all([d3.json("../data/vis3_ranker.json"), d3.json("../data/communities.g
     m.select("circle").attr("fill", "var(--text-primary)");
     m.select("text").text(d => d.rank);
     m.sort((a, b) => b.rank - a.rank);
+    const lab = markers.selectAll("text.toplab").data(top.slice(0, 3), d => d.c).join("text").attr("class", "toplab")
+      .attr("font-size", 11.5).attr("font-weight", 600).attr("fill", "#0b0b0b")
+      .style("paint-order", "stroke").style("stroke", "#fff").style("stroke-width", "4px").style("stroke-linejoin", "round")
+      .attr("pointer-events", "none");
+    lab.attr("x", d => proj([d.lon, d.lat])[0] + (proj([d.lon, d.lat])[0] > 230 ? -14 : 14)).attr("text-anchor", d => proj([d.lon, d.lat])[0] > 230 ? "end" : "start")
+      .attr("y", d => proj([d.lon, d.lat])[1] + 4).text(d => d.known.replace(/ \(.*\)/, ""));
     linkHover();
   }
   function linkHover() {
@@ -354,8 +379,17 @@ Promise.all([d3.json("../data/vis3_ranker.json"), d3.json("../data/communities.g
     d3.select("#d-unit").text(per > 1 ? `1 dot = ${per} sales` : "1 dot = 1 sale (10% sample)");
   }
 
+  function answer(R) {
+    const what = state.seg === "All" ? "a home" : state.seg === "Villa" ? "a villa or townhouse" : state.seg === "Studio" ? "a studio" : "a " + state.seg + " flat";
+    const top = R.slice(0, 3).map(d => d.known.replace(/ \(.*\)/, ""));
+    const fitTop = R[0] ? Math.round(R[0].raw.fit * 100) : 0;
+    d3.select("#answer").html(top.length
+      ? `With <b>${aed(state.budget)}</b> for ${what}, your best matches are <b>${top[0]}</b>${top[1] ? `, <b>${top[1]}</b>` : ""}${top[2] ? ` and <b>${top[2]}</b>` : ""}. In ${top[0]}, ${fitTop}% of recent sales were within your budget.`
+      : `No community has enough ${state.seg} sales to rank.`);
+  }
+
   function update() {
-    const R = compute(); drawHead(); drawTable(R); drawMap(R);
+    const R = compute(); answer(R); drawHead(); drawTable(R); drawMap(R);
     if (!userPicked || !state.selected || !byC.get(state.selected).ranked) state.selected = R[0] && R[0].c;
     body.selectAll("g.row").classed("sel", r => r.c === state.selected);
     drawDetail();
