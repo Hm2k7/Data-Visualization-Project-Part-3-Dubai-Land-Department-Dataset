@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where Should I Buy? · multi-criteria community ranker</title>
+<link rel="stylesheet" href="../assets/common.css">
+<style>
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 14px; align-items: start; }
+  @media (max-width: 1360px) { .layout { grid-template-columns: 1fr; } }
+  .weights { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 16px; margin: 4px 0 12px; }
+  @media (max-width: 1100px) { .weights { grid-template-columns: repeat(2, 1fr); } }
+  .w { font-size: 12px; }
+  .w .top { display: flex; justify-content: space-between; align-items: center; }
+  .w .top b { font-weight: 600; color: var(--text-primary); }
+  .w .top .num { color: var(--text-secondary); }
+  .w input { width: 100%; }
+  .w .hint { color: var(--text-muted); font-size: 11px; }
+  .sw2 { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  .presets { display: flex; gap: 6px; flex-wrap: wrap; }
+  #table text { font-size: 12px; }
+  .row { cursor: pointer; }
+  .row .hl { fill: transparent; }
+  .row:hover .hl, .row.hover .hl { fill: #efede8; }
+  .row.sel .hl { fill: #e3eefc; }
+  .row.excluded { opacity: .45; }
+  .colhead { cursor: pointer; }
+  .colhead text { font-size: 11px; }
+  .colhead.on text { font-weight: 700; fill: var(--text-primary); }
+  .budget { display: flex; align-items: center; gap: 8px; }
+  .budget input { width: 200px; }
+  .budget .num { font-weight: 500; min-width: 86px; display: inline-block; }
+  .big { font-size: 18px; font-family: var(--mono); font-weight: 500; }
+  .toggle-all { font: inherit; font-size: 12px; border: 0; background: none; color: var(--accent); cursor: pointer; padding: 6px 0; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="crumbs"><a href="../index.html">CS333 Part 3 · Group 3</a> / Visualization 3</div>
+  <h1>Where should I buy? Rank Dubai's communities by what matters to <i>you</i></h1>
+  <p class="lede">A LineUp-style ranking (Gratzl et al., InfoVis 2013): choose a home type, a budget and how much each criterion matters. Each community's score is a stacked bar, so you can see <i>why</i> it ranks where it does. Rows move as you change the weights. The map shows the current top 10, and clicking a row shows every recent sale there against your budget.</p>
+
+  <div class="controls">
+    <div><label class="title">Home type</label><span class="seg" data-key="seg" id="segbtns"></span></div>
+    <div class="budget"><label class="title">Budget</label><input type="range" id="budget" min="0" max="1000" value="500"><span class="num" id="budgetlbl"></span></div>
+    <div><label class="title">Prefer</label><span class="seg" data-key="pref"><button data-v="ready" class="on">Ready homes</button><button data-v="offplan">Off-plan</button></span></div>
+    <div><label class="title">Persona</label><span class="presets" id="presets"></span></div>
+  </div>
+
+  <div class="layout">
+    <div class="card">
+      <h2>Weights: how much does each criterion matter? (0 = ignore)</h2>
+      <div class="weights" id="weights"></div>
+      <svg id="table"></svg>
+      <button class="toggle-all" id="toggleAll">Show all communities</button>
+    </div>
+    <div>
+      <div class="card">
+        <h2>Today's top 10 on the map</h2>
+        <div class="sub">Numbers = rank. Lines = metro (Red, Green, Route 2020 branch). Hover a number or a row to link them.</div>
+        <svg id="map" width="366" height="330"></svg>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="kicker" id="d-kicker">Budget check</div>
+        <h2 id="d-title"></h2>
+        <div class="sub" id="d-sub"></div>
+        <svg id="dots" width="366" height="210"></svg>
+        <div class="legend"><span><span class="sw" style="background:var(--series-1)"></span>Ready</span><span><span class="sw" style="background:var(--series-2)"></span>Off-plan</span><span class="muted" id="d-unit"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <details class="notes" open>
+    <summary>Encoding, interaction & data notes</summary>
+    <div class="cols">
+      <div><h3>Encoding</h3><ul>
+        <li><b>Row order</b>: rank by weighted score (or by one criterion if you click its column header).</li>
+        <li><b>Stacked bar</b>: total length = score (0–100); each coloured segment = weight × criterion score, so its length shows that criterion's contribution. Colour = criterion (8 fixed colours, same order everywhere).</li>
+        <li><b>Criterion columns</b>: bar length = the community's percentile among the ranked communities (budget fit = raw share within budget). Hatched = unknown, counted as average.</li>
+        <li><b>▲▼</b> beside the rank: how many places the row moved after your last change.</li>
+        <li><b>Map</b>: numbered circles at community centroids (position), metro lines in their line colours.</li>
+        <li><b>Budget check</b>: a unit dot plot. Each dot = 1 (or k) recent sales, x = price (log scale), colour = ready vs off-plan, vertical rule = your budget.</li></ul></div>
+      <div><h3>Interaction</h3><ul>
+        <li>Home type, budget and Ready/Off-plan recompute the live criteria from the 2024–26 sales.</li>
+        <li>Weight sliders and persona presets re-weight the scores; rows animate to their new rank.</li>
+        <li>Click a column header to rank by that criterion only; click "Score" to go back.</li>
+        <li>Hover a row ↔ highlights its marker on the map (and the other way round).</li>
+        <li>Click a row to open its budget check.</li></ul></div>
+      <div><h3>Data</h3><ul>
+        <li><b>Budget fit, Value (median AED/m²), Liquidity (number of sales), Ready share</b>: clean residential sales 2024 to Sep 2026 of the chosen home type. Communities with fewer than 10 such sales (10% sample) are listed but not ranked.</li>
+        <li><b>Momentum</b>: growth of median AED/m², 2018–20 → 2024–26 (all homes).</li>
+        <li><b>Metro access</b>: straight-line km from the community centroid (<span class="num">dubai.geojson</span>) to the nearest of the 56 stations in <span class="num">dubai_metro_stations.geojson</span>.</li>
+        <li><b>Amenities</b>: Foursquare venues in <span class="num">dubai_venues.csv</span>. The file caps a community at 100 venues, so "100+" communities are tied at the top.</li>
+        <li><b>Established</b>: residents per km² in 2019 (<span class="num">dubai.geojson</span> population).</li></ul></div>
+    </div>
+  </details>
+</div>
+<div class="tooltip" id="tt"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+const fmt = d3.format(",.0f"), pct0 = d3.format(".0%"), pctS = d3.format("+.0%");
+const aed = v => v >= 1e6 ? "AED " + d3.format(".2~f")(v / 1e6) + "M" : "AED " + d3.format(",.0f")(v / 1e3) + "k";
+const COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"]; // fixed order
+const CRIT = [
+  { k: "fit",    name: "Budget fit",   hint: "share of sales ≤ budget", fmt: v => pct0(v), higher: true, raw: true },
+  { k: "value",  name: "Value",        hint: "low median AED/m²",      fmt: v => fmt(v) + "/m²", higher: false },
+  { k: "growth", name: "Momentum",     hint: "price growth since 2018–20", fmt: v => pctS(v), higher: true },
+  { k: "liq",    name: "Liquidity",    hint: "many recent sales",       fmt: v => fmt(v) + " sales", higher: true },
+  { k: "ready",  name: "Ready / Off-plan", hint: "share matching your preference", fmt: v => pct0(v), higher: true },
+  { k: "metro",  name: "Metro access", hint: "km to nearest station",   fmt: v => v.toFixed(1) + " km", higher: false },
+  { k: "amen",   name: "Amenities",    hint: "Foursquare venues",       fmt: (v, c) => (c && c.venueCap ? "100+" : fmt(v)) + " venues", higher: true },
+  { k: "estab",  name: "Established",  hint: "residents per km² (2019)", fmt: v => fmt(v) + "/km²", higher: true }];
+const PRESETS = {
+  "First-time buyer": { seg: "1BR", budget: 1.2e6, pref: "ready", w: [5, 3, 1, 2, 3, 4, 3, 1] },
+  "Family":           { seg: "Villa", budget: 4e6, pref: "ready", w: [5, 2, 1, 1, 4, 1, 2, 3] },
+  "Investor":         { seg: "1BR", budget: 1.5e6, pref: "offplan", w: [3, 4, 5, 5, 1, 2, 1, 0] },
+  "Equal weights":    { seg: "All", budget: 2e6, pref: "ready", w: [1, 1, 1, 1, 1, 1, 1, 1] }};
+const state = { seg: "1BR", budget: 1.2e6, pref: "ready", w: PRESETS["First-time buyer"].w.slice(), sortBy: "score", showAll: false, selected: null, hover: null };
+const tt = d3.select("#tt");
+const showTip = (ev, h) => { tt.html(h).style("opacity", 1); moveTip(ev); };
+function moveTip(ev) { const w = tt.node().offsetWidth; tt.style("left", (ev.clientX + 14 + w > innerWidth ? ev.clientX - w - 14 : ev.clientX + 14) + "px").style("top", (ev.clientY + 12) + "px"); }
+const hideTip = () => tt.style("opacity", 0);
+// budget slider: log scale AED 300k .. 20M
+const bScale = d3.scaleLog().domain([3e5, 2e7]).range([0, 1000]);
+
+Promise.all([d3.json("../data/vis3_ranker.json"), d3.json("../data/communities.geojson")]).then(([data, geo]) => {
+  const SEGS = ["All"].concat(data.segs);
+  const comms = data.comms.map(c => ({ ...c, sales: [] }));
+  let userPicked = false;   // follow the #1 community until the user clicks a row
+  const byC = new Map(comms.map(c => [c.c, c]));
+  data.sales.forEach(([c, seg, price, m2, op, yr]) => byC.get(c).sales.push({ seg, price, m2, op, yr }));
+
+  // ---------------------------------------------------------- controls
+  d3.select("#segbtns").selectAll("button").data(SEGS).join("button").attr("data-v", d => d).text(d => d === "All" ? "All homes" : d);
+  d3.select("#presets").selectAll("button").data(Object.keys(PRESETS)).join("button").attr("class", "chip").text(d => d)
+    .on("click", (ev, name) => { const p = PRESETS[name]; Object.assign(state, { seg: p.seg, budget: p.budget, pref: p.pref, w: p.w.slice(), sortBy: "score" });
+      d3.selectAll("#presets .chip").classed("on", d => d === name); syncControls(); update(); });
+  const wDiv = d3.select("#weights").selectAll("div").data(CRIT).join("div").attr("class", "w");
+  wDiv.html((d, i) => `<div class="top"><span><span class="sw2" style="background:${COLORS[i]}"></span><b>${d.name}</b></span><span class="num" id="wv${i}"></span></div>
+    <input type="range" min="0" max="5" step="1" id="w${i}"><div class="hint">${d.hint}</div>`);
+  CRIT.forEach((d, i) => d3.select("#w" + i).on("input", function () { state.w[i] = +this.value; d3.selectAll("#presets .chip").classed("on", false); syncControls(); update(); }));
+  d3.select("#budget").on("input", function () { state.budget = Math.round(bScale.invert(+this.value) / 1e4) * 1e4; syncControls(); update(); });
+  d3.selectAll(".seg").each(function () {
+    const seg = d3.select(this), k = this.dataset.key;
+    seg.selectAll("button").on("click", function () { state[k] = this.dataset.v; d3.selectAll("#presets .chip").classed("on", false); syncControls(); update(); });
+  });
+  d3.select("#toggleAll").on("click", () => { state.showAll = !state.showAll; update(); });
+  function syncControls() {
+    d3.selectAll(".seg").each(function () { const k = this.dataset.key; d3.select(this).selectAll("button").classed("on", function () { return this.dataset.v === state[k]; }); });
+    d3.select("#budget").property("value", bScale(state.budget));
+    d3.select("#budgetlbl").text(aed(state.budget));
+    CRIT.forEach((d, i) => { d3.select("#w" + i).property("value", state.w[i]); d3.select("#wv" + i).text(state.w[i]); });
+  }
+
+  // ---------------------------------------------------------- scoring
+  const segIdx = s => s === "All" ? null : data.segs.indexOf(s);
+  function compute() {
+    const si = segIdx(state.seg);
+    comms.forEach(c => {
+      const ss = si === null ? c.sales : c.sales.filter(x => x.seg === si);
+      c.cur = ss; c.n = ss.length;
+      c.raw = {
+        fit: ss.length ? ss.filter(x => x.price <= state.budget).length / ss.length : null,
+        value: ss.length ? d3.median(ss, x => x.price / x.m2) : null,
+        growth: c.growth, liq: ss.length,
+        ready: ss.length ? (state.pref === "ready" ? 1 - d3.mean(ss, x => x.op) : d3.mean(ss, x => x.op)) : null,
+        metro: c.metroKm, amen: c.venues, estab: c.density };
+      c.ranked = c.n >= 10;   // too few sales of this type -> listed, not ranked
+    });
+    const R = comms.filter(c => c.ranked);
+    // percentile-rank normalisation (robust to outliers); budget fit keeps its raw 0..1 share
+    CRIT.forEach(cr => {
+      const vals = R.map(c => c.raw[cr.k]).filter(v => v != null).sort(d3.ascending);
+      R.forEach(c => {
+        const v = c.raw[cr.k];
+        if (v == null) { c.s = c.s || {}; c.s[cr.k] = { v: 0.5, missing: true }; return; }
+        let p;
+        if (cr.raw) p = v;
+        else { const lo = d3.bisectLeft(vals, v), hi = d3.bisectRight(vals, v); p = vals.length > 1 ? ((lo + hi - 1) / 2) / (vals.length - 1) : 0.5; }
+        if (!cr.higher) p = 1 - p;
+        c.s = c.s || {}; c.s[cr.k] = { v: p, missing: false };
+      });
+    });
+    const W = d3.sum(state.w) || 1;
+    R.forEach(c => { c.parts = CRIT.map((cr, i) => state.w[i] * c.s[cr.k].v / W); c.score = d3.sum(c.parts); });
+    const key = state.sortBy === "score" ? (c => c.score) : (c => c.s[state.sortBy].v);
+    R.sort((a, b) => d3.descending(key(a), key(b)) || d3.descending(a.n, b.n));
+    R.forEach((c, i) => { c.prevRank = c.rank; c.rank = i + 1; });
+    comms.filter(c => !c.ranked).forEach(c => { c.prevRank = c.rank; c.rank = null; });
+    return R;
+  }
+
+  // ---------------------------------------------------------- ranking table (LineUp-style)
+  const RH = 23, HEAD = 46;
+  const COL = { rank: 0, name: 66, score: 262, attrs: 520 }, SW = 226, AW = 54;
+  const TW = COL.attrs + CRIT.length * (AW + 6);
+  const table = d3.select("#table").attr("width", TW);
+  const defs = table.append("defs");
+  const hp = defs.append("pattern").attr("id", "hatch").attr("patternUnits", "userSpaceOnUse").attr("width", 4).attr("height", 4).attr("patternTransform", "rotate(45)");
+  hp.append("rect").attr("width", 4).attr("height", 4).attr("fill", "#fff"); hp.append("line").attr("y2", 4).attr("stroke", "#b9b6ad").attr("stroke-width", 2);
+  const head = table.append("g");
+  const body = table.append("g").attr("transform", `translate(0,${HEAD})`);
+  const sx = d3.scaleLinear().domain([0, 1]).range([0, SW]);
+
+  function drawHead() {
+    head.selectAll("*").remove();
+    head.append("text").attr("x", 4).attr("y", HEAD - 8).attr("font-size", 11).text("Rank");
+    head.append("text").attr("x", COL.name).attr("y", HEAD - 8).attr("font-size", 11).text("Community (market name)");
+    const sh = head.append("g").attr("class", "colhead" + (state.sortBy === "score" ? " on" : "")).on("click", () => { state.sortBy = "score"; update(); });
+    sh.append("text").attr("x", COL.score).attr("y", HEAD - 8).text("Score ▾ (stacked by criterion)");
+    // mini weight bar above the score column
+    let acc = 0; const W = d3.sum(state.w) || 1;
+    state.w.forEach((w, i) => { if (!w) return; head.append("rect").attr("x", COL.score + sx(acc / W)).attr("y", 8).attr("height", 8).attr("rx", 2)
+      .attr("width", Math.max(0, sx(w / W) - 2)).attr("fill", COLORS[i]); acc += w; });
+    head.append("text").attr("x", COL.score - 6).attr("y", 15).attr("text-anchor", "end").attr("font-size", 10).attr("fill", "var(--text-muted)").text("your weights");
+    CRIT.forEach((cr, i) => {
+      const g = head.append("g").attr("class", "colhead" + (state.sortBy === cr.k ? " on" : "")).attr("transform", `translate(${COL.attrs + i * (AW + 6)},0)`)
+        .on("click", () => { state.sortBy = cr.k; update(); })
+        .on("mouseenter", ev => showTip(ev, `<div class="t-title">${cr.name}</div><div class="t-note">${cr.hint}. Click to rank by this criterion alone.</div>`))
+        .on("mousemove", moveTip).on("mouseleave", hideTip);
+      g.append("rect").attr("y", 26).attr("width", AW).attr("height", 3).attr("rx", 1.5).attr("fill", COLORS[i]).attr("opacity", state.w[i] ? 1 : .25);
+      const SHORT = { fit: "Budget", value: "Value", growth: "Momentum", liq: "Liquidity", ready: state.pref === "ready" ? "Ready" : "Off-plan",
+                      metro: "Metro", amen: "Amenities", estab: "Estab." };
+      g.append("text").attr("y", 14).attr("font-size", 10.5).text(SHORT[cr.k]);
+      g.append("text").attr("y", HEAD - 8).attr("font-size", 10).attr("fill", "var(--text-muted)").text(state.sortBy === cr.k ? "▾ sorted" : "");
+    });
+  }
+
+  function drawTable(R) {
+    const rows = state.showAll ? R.concat(comms.filter(c => !c.ranked)) : R.slice(0, 25);
+    d3.select("#toggleAll").text(state.showAll ? "Show top 25 only" : `Show all ${comms.length} communities (${comms.filter(c => !c.ranked).length} without enough ${state.seg === "All" ? "" : state.seg + " "}sales)`);
+    table.transition().duration(300).attr("height", HEAD + rows.length * RH + 6);
+    const T = d3.transition().duration(650).ease(d3.easeCubicInOut);
+    const sel = body.selectAll("g.row").data(rows, d => d.c);
+    sel.exit().transition(T).attr("opacity", 0).remove();
+    const enter = sel.enter().append("g").attr("class", "row").attr("opacity", 0)
+      .attr("transform", (d, i) => `translate(0,${(rows.length + 2) * RH})`);
+    enter.append("rect").attr("class", "hl").attr("x", 0).attr("width", TW).attr("height", RH - 1).attr("rx", 4);
+    enter.append("text").attr("class", "rk num").attr("x", 6).attr("y", 15.5).attr("font-weight", 600);
+    enter.append("text").attr("class", "mv num").attr("x", 28).attr("y", 15.5).attr("font-size", 10);
+    enter.append("text").attr("class", "nm").attr("x", COL.name).attr("y", 15.5);
+    enter.append("g").attr("class", "stack").attr("transform", `translate(${COL.score},4)`);
+    enter.append("text").attr("class", "sc num").attr("y", 15.5).attr("font-size", 11);
+    enter.append("g").attr("class", "attrs");
+    enter.on("mouseenter", (ev, d) => { state.hover = d.c; linkHover(); showTip(ev, rowTip(d)); })
+      .on("mousemove", moveTip).on("mouseleave", () => { state.hover = null; linkHover(); hideTip(); })
+      .on("click", (ev, d) => { userPicked = true; state.selected = d.c; drawDetail(); body.selectAll("g.row").classed("sel", r => r.c === state.selected); });
+    const all = enter.merge(sel);
+    all.classed("excluded", d => !d.ranked).classed("sel", d => d.c === state.selected);
+    all.transition(T).attr("opacity", 1).attr("transform", (d, i) => `translate(0,${i * RH})`);
+    all.select(".rk").text(d => d.rank || "–");
+    all.select(".mv").each(function (d) {
+      const t = d3.select(this);
+      if (!d.rank || !d.prevRank || d.prevRank === d.rank) { t.text(""); return; }
+      const up = d.prevRank > d.rank; t.text((up ? "▲" : "▼") + Math.abs(d.prevRank - d.rank)).attr("fill", up ? "#006300" : "#b8312f");
+    });
+    all.select(".nm").text(d => d.known.length > 25 ? d.known.slice(0, 24) + "…" : d.known);
+    all.select(".stack").each(function (d) {
+      const g = d3.select(this);
+      const parts = d.ranked ? d.parts : [];
+      let acc = 0;
+      const segs = parts.map((p, i) => { const o = { i, x: acc, w: p }; acc += p; return o; }).filter(o => o.w > 0);
+      g.selectAll("rect").data(segs, o => o.i).join(e => e.append("rect").attr("height", RH - 9).attr("rx", 2).attr("x", 0).attr("width", 0))
+        .attr("fill", o => COLORS[o.i]).transition(T).attr("x", o => sx(o.x)).attr("width", o => Math.max(0, sx(o.w) - 1.5));
+    });
+    all.select(".sc").transition(T).attr("x", d => COL.score + (d.ranked ? sx(d.score) : 0) + 5).text(d => d.ranked ? Math.round(d.score * 100) : "too few sales");
+    all.select(".attrs").each(function (d) {
+      const g = d3.select(this);
+      const cells = CRIT.map((cr, i) => ({ i, cr, s: d.ranked ? d.s[cr.k] : null }));
+      g.selectAll("g.cell").data(cells).join(e => { const c = e.append("g").attr("class", "cell");
+          c.append("rect").attr("class", "track").attr("y", 5).attr("height", RH - 11).attr("rx", 2).attr("fill", "#f1f0ec").attr("width", AW);
+          c.append("rect").attr("class", "bar").attr("y", 5).attr("height", RH - 11).attr("rx", 2).attr("width", 0); return c; })
+        .attr("transform", c => `translate(${COL.attrs + c.i * (AW + 6)},0)`)
+        .each(function (c) { d3.select(this).select(".bar").attr("fill", c.s && c.s.missing ? "url(#hatch)" : COLORS[c.i])
+            .attr("opacity", state.w[c.i] ? 1 : .3).transition(T).attr("width", c.s ? Math.max(1.5, c.s.v * AW) : 0); });
+    });
+  }
+
+  function rowTip(d) {
+    let h = `<div class="t-title">${d.rank ? "#" + d.rank + " " : ""}${d.known}</div><div class="t-note" style="margin:0 0 4px">DLD: ${d.name} · ${d.n} ${state.seg === "All" ? "" : state.seg + " "}sales 2024–26</div>`;
+    if (!d.ranked) return h + `<div class="t-note">Fewer than 10 sales of this home type, so not ranked.</div>`;
+    CRIT.forEach((cr, i) => { const v = d.raw[cr.k];
+      h += `<div class="t-row"><span><span class="sw2" style="background:${COLORS[i]}"></span>${cr.name}</span><span>${v == null ? "unknown" : cr.fmt(v, d)} · ${Math.round(d.s[cr.k].v * 100)}</span></div>`; });
+    return h + `<div class="t-note">Score ${Math.round(d.score * 100)} / 100. Nearest station: ${d.metro}.</div>`;
+  }
+
+  // ---------------------------------------------------------- map
+  const mapSvg = d3.select("#map");
+  const proj = d3.geoMercator().fitExtent([[4, 4], [362, 326]], { type: "MultiPoint", coordinates: [[55.03, 24.9], [55.47, 25.3]] });
+  const path = d3.geoPath(proj);
+  mapSvg.append("clipPath").attr("id", "mclip").append("rect").attr("width", 366).attr("height", 330);
+  const mg = mapSvg.append("g").attr("clip-path", "url(#mclip)");
+  const polys = mg.append("g").selectAll("path").data(geo.features).join("path").attr("d", path)
+    .attr("fill", f => byC.has(f.properties.c) ? "#e2e0d9" : "#efeee9").attr("stroke", "#fff").attr("stroke-width", .6);
+  Object.entries(data.metroLines).forEach(([k, pts]) => {
+    let p = pts.map(d => proj([d[2], d[1]]));
+    if (k === "Expo") return;
+    if (k === "Red") { const main = pts.filter(d => +d[0].slice(1) < 70), br = [pts.find(d => d[0] === "R38")].concat(pts.filter(d => +d[0].slice(1) >= 70)).concat(data.metroLines.Expo);
+      mg.append("path").attr("d", d3.line()(main.map(d => proj([d[2], d[1]])))).attr("stroke", "var(--red-line)").attr("stroke-width", 2).attr("fill", "none");
+      mg.append("path").attr("d", d3.line()(br.map(d => proj([d[2], d[1]])))).attr("stroke", "var(--red-line)").attr("stroke-opacity", .45).attr("stroke-width", 2).attr("fill", "none");
+      return; }
+    mg.append("path").attr("d", d3.line()(p)).attr("stroke", "var(--green-line)").attr("stroke-width", 2).attr("fill", "none");
+  });
+  const markers = mg.append("g");
+  function drawMap(R) {
+    const top = R.slice(0, 10);
+    const m = markers.selectAll("g.mk").data(top, d => d.c).join(e => { const g = e.append("g").attr("class", "mk").style("cursor", "pointer");
+        g.append("circle").attr("r", 10).attr("stroke", "#fff").attr("stroke-width", 2);
+        g.append("text").attr("text-anchor", "middle").attr("dy", 4).attr("font-size", 10.5).attr("font-weight", 700).attr("fill", "#fff");
+        g.attr("transform", d => `translate(${proj([d.lon, d.lat])})`); return g; })
+      .on("mouseenter", (ev, d) => { state.hover = d.c; linkHover(); showTip(ev, rowTip(d)); }).on("mousemove", moveTip)
+      .on("mouseleave", () => { state.hover = null; linkHover(); hideTip(); })
+      .on("click", (ev, d) => { userPicked = true; state.selected = d.c; drawDetail(); body.selectAll("g.row").classed("sel", r => r.c === state.selected); });
+    m.transition().duration(500).attr("transform", d => `translate(${proj([d.lon, d.lat])})`);
+    m.select("circle").attr("fill", "var(--text-primary)");
+    m.select("text").text(d => d.rank);
+    m.sort((a, b) => b.rank - a.rank);
+    linkHover();
+  }
+  function linkHover() {
+    body.selectAll("g.row").classed("hover", d => d.c === state.hover);
+    markers.selectAll("g.mk circle").attr("fill", d => d.c === state.hover ? "var(--accent)" : "var(--text-primary)").attr("r", d => d.c === state.hover ? 13 : 10);
+    polys.attr("fill", f => f.properties.c === state.hover ? "#b7d3f6" : f.properties.c === state.selected ? "#cde2fb" : byC.has(f.properties.c) ? "#e2e0d9" : "#efeee9");
+  }
+
+  // ---------------------------------------------------------- budget dot plot (unit visualization)
+  function drawDetail() {
+    const c = byC.get(state.selected); const svg = d3.select("#dots"); svg.selectAll("*").remove();
+    if (!c) return;
+    d3.select("#d-title").text(c.known);
+    const ss = c.cur.slice().sort((a, b) => a.price - b.price);
+    const within = ss.filter(s => s.price <= state.budget).length;
+    d3.select("#d-sub").html(ss.length ? `<span class="big">${pct0(within / ss.length)}</span> of ${ss.length} ${state.seg === "All" ? "" : state.seg + " "}sales in 2024–26 were at or below ${aed(state.budget)}. Median ${aed(d3.median(ss, s => s.price))}, ${d3.format(",.0f")(d3.median(ss, s => s.m2))} m².`
+      : `No ${state.seg} sales recorded here in 2024–26.`);
+    if (!ss.length) return;
+    const W = 366, H = 210, m = { l: 8, r: 8, t: 10, b: 26 };
+    const x = d3.scaleLog().domain([2e5, 3e7]).range([m.l, W - m.r]).clamp(true);
+    const NB = 70, binW = (W - m.l - m.r) / NB;
+    const bins = d3.range(NB).map(() => []);
+    ss.forEach(s => { const b = Math.min(NB - 1, Math.max(0, Math.floor((x(s.price) - m.l) / binW))); bins[b].push(s); });
+    const maxStack = d3.max(bins, b => b.length);
+    const per = Math.max(1, Math.ceil(maxStack / 32));            // 1 dot = `per` sales so stacks fit
+    const r = Math.min(binW / 2 - 0.4, 2.6);
+    const dots = [];
+    bins.forEach((b, i) => { b.sort((a, b2) => a.op - b2.op); for (let k = 0; k < b.length; k += per) dots.push({ x: m.l + (i + .5) * binW, k: k / per, s: b[k] }); });
+    svg.append("g").attr("class", "axis").attr("transform", `translate(0,${H - m.b})`)
+      .call(d3.axisBottom(x).tickValues([3e5, 1e6, 3e6, 1e7, 3e7]).tickFormat(v => v >= 1e6 ? v / 1e6 + "M" : v / 1e3 + "k").tickSize(3));
+    svg.append("rect").attr("x", m.l).attr("y", m.t).attr("width", Math.max(0, x(state.budget) - m.l)).attr("height", H - m.b - m.t).attr("fill", "#0b0b0b").attr("fill-opacity", .04);
+    svg.selectAll("circle").data(dots).join("circle").attr("cx", d => d.x).attr("cy", d => H - m.b - 4 - d.k * (r * 2 + 0.6)).attr("r", r)
+      .attr("fill", d => d.s.op ? COLORS[1] : COLORS[0]).attr("opacity", d => d.s.price <= state.budget ? 1 : .45);
+    svg.append("line").attr("x1", x(state.budget)).attr("x2", x(state.budget)).attr("y1", m.t - 4).attr("y2", H - m.b).attr("stroke", "var(--text-primary)").attr("stroke-width", 1.5);
+    svg.append("text").attr("x", x(state.budget) + 4).attr("y", m.t + 6).attr("font-size", 11).attr("fill", "var(--text-primary)").text("your budget " + aed(state.budget));
+    d3.select("#d-unit").text(per > 1 ? `1 dot = ${per} sales` : "1 dot = 1 sale (10% sample)");
+  }
+
+  function update() {
+    const R = compute(); drawHead(); drawTable(R); drawMap(R);
+    if (!userPicked || !state.selected || !byC.get(state.selected).ranked) state.selected = R[0] && R[0].c;
+    body.selectAll("g.row").classed("sel", r => r.c === state.selected);
+    drawDetail();
+  }
+  d3.selectAll("#presets .chip").classed("on", d => d === "First-time buyer");
+  syncControls(); update();
+  // clear rank-change arrows on first paint
+  comms.forEach(c => c.prevRank = c.rank);
+});
+</script>
+</body>
+</html>

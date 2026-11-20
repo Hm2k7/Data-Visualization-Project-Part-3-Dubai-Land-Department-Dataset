@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Along the Line · Dubai metro & tram price profiles</title>
+<link rel="stylesheet" href="../assets/common.css">
+<style>
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 14px; align-items: start; }
+  @media (max-width: 1180px) { .layout { grid-template-columns: 1fr; } }
+  #strip { width: 100%; overflow-x: auto; }
+  .station-hit { cursor: pointer; }
+  .station.dim { opacity: .18; }
+  .station.sel .sdot { stroke: var(--text-primary); stroke-width: 2.5; }
+  .station-label { font-size: 10.5px; fill: var(--text-secondary); }
+  .station.sel .station-label { fill: var(--text-primary); font-weight: 600; }
+  .track-title { font-size: 13px; font-weight: 600; fill: var(--text-primary); }
+  .track-sub { font-size: 11px; fill: var(--text-muted); }
+  .annot text { font-size: 11px; fill: var(--text-primary); }
+  .annot line, .annot path { stroke: var(--text-primary); stroke-width: 1; fill: none; }
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 0 10px; }
+  .kpi { background: var(--surface-0); border-radius: 8px; padding: 7px 9px; }
+  .kpi .v { font-family: var(--mono); font-size: 16px; font-weight: 500; }
+  .kpi .l { font-size: 11px; color: var(--text-muted); }
+  .panel-sec { margin-top: 12px; }
+  .panel-sec h3 { font-size: 12px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin: 0 0 6px; font-weight: 500; }
+  .commlist { font-size: 12px; margin: 0; padding: 0; list-style: none; }
+  .commlist li { display: flex; justify-content: space-between; border-bottom: 1px solid var(--rule); padding: 3px 0; }
+  .commlist li span:last-child { font-family: var(--mono); color: var(--text-secondary); }
+  .bandnote { font-size: 12px; color: var(--text-secondary); min-height: 18px; }
+  .nostation { margin-top: 14px; }
+  .brush .selection { fill: var(--text-primary); fill-opacity: .08; stroke: var(--text-primary); stroke-width: 1; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="crumbs"><a href="../index.html">CS333 Part 3 · Group 3</a> / Visualization 1</div>
+  <h1>Along the Line: what does each metro & tram station "sell"?</h1>
+  <p class="lede">Dubai's rail lines drawn as straight strip maps (like the diagram above the train doors). Above each station: the spread of residential sale prices per m² for homes whose <i>nearest station</i> (DLD) is that stop. On the line: sales volume. Below: what is around the station (Foursquare venues). Click a station for its full profile; drag on a price axis to find stations in your price band.</p>
+
+  <div class="controls" id="controls">
+    <div><label class="title">Period</label>
+      <span class="seg" data-key="period"><button data-v="early">2015–2020</button><button data-v="recent" class="on">2021–2026</button><button data-v="all">All</button></span></div>
+    <div><label class="title">Registration</label>
+      <span class="seg" data-key="reg"><button data-v="all" class="on">All sales</button><button data-v="offplan">Off-plan</button><button data-v="ready">Ready</button></span></div>
+    <div><label class="title">Notes</label>
+      <span class="seg" data-key="story"><button data-v="on" class="on">Story</button><button data-v="off">Off</button></span></div>
+    <div class="bandnote" id="bandnote">Tip: drag vertically on any price axis to set a budget band (AED/m²).</div>
+  </div>
+
+  <div class="layout">
+    <div class="card"><div id="strip"><div class="loading">Loading station profiles…</div></div>
+      <div class="legend" id="legend" style="margin-top:6px"></div>
+    </div>
+    <div class="card" id="panel">
+      <div class="kicker" id="p-kicker">Station profile</div>
+      <h2 id="p-title">Select a station</h2>
+      <div class="sub" id="p-sub">Click any station circle on the strip map.</div>
+      <div class="kpis" id="p-kpis"></div>
+      <div class="panel-sec"><h3>Price per m² vs all of Dubai</h3><svg id="p-hist" width="348" height="120"></svg></div>
+      <div class="panel-sec"><h3>What sells here (1 square = 1% of sales)</h3><svg id="p-waffle" width="348" height="104"></svg><div class="legend" id="p-waffle-legend"></div></div>
+      <div class="panel-sec"><h3>Where those homes actually are</h3><svg id="p-map" width="348" height="250"></svg><div class="sub" id="p-map-note"></div></div>
+      <div class="panel-sec"><h3>Top communities (known as)</h3><ul class="commlist" id="p-comms"></ul></div>
+    </div>
+  </div>
+
+  <div class="card nostation" id="nostation"></div>
+
+  <details class="notes" open>
+    <summary>Encoding, interaction & data notes</summary>
+    <div class="cols">
+      <div><h3>Encoding</h3><ul>
+        <li><b>Position (x)</b>: station order along each line, evenly spaced (schematic, not geographic).</li>
+        <li><b>Position (y), above the line</b>: price per m². Thin whisker = 10th–90th percentile; box = 25th–75th; white tick = median.</li>
+        <li><b>Texture</b>: a hatched box means the typical sale is more than 2 km from its "nearest" station, i.e. not walkable.</li>
+        <li><b>Area of the station circle</b>: number of sales (10% sample). Hollow tick = no sales attributed.</li>
+        <li><b>Length of the bar below the line</b>: number of Foursquare venues around the station, split by colour into 5 venue groups.</li>
+        <li><b>Colour of the line</b>: identity of the line (Red, Green, Tram).</li></ul></div>
+      <div><h3>Interaction</h3><ul>
+        <li>Hover a station: tooltip with its key numbers.</li>
+        <li>Click a station: the panel shows its histogram vs Dubai, a waffle of unit types, a geographic map of the communities whose sales were attributed to it, and the top communities.</li>
+        <li>Drag on a price axis: brush a price band; stations whose median falls outside it fade on all three lines.</li>
+        <li>Period / registration buttons recompute every glyph.</li></ul></div>
+      <div><h3>Data & cleaning</h3><ul>
+        <li>Residential sales (units and villas) from <span class="num">transactions.csv</span>, 2015 to 17 Sep 2026, with the price and size bounds from our prep script (42,323 sales kept).</li>
+        <li><span class="num">nearest_metro_en</span> mixes metro stations, tram stops, renamed stations (Damac → R36, Sharaf DG → Mashreq, First Abu Dhabi Bank → FGB) and a typo ("Jumeirah Beach Resdency"). We mapped all 56 labels onto station codes from <span class="num">dubai_metro_stations.geojson</span> and RTA's tram order.</li>
+        <li>32% of all transactions have no nearest station; they are summarised in the box below the map.</li>
+        <li>Distance is measured from the DLD area centroid to the station, so it is approximate.</li></ul></div>
+    </div>
+  </details>
+</div>
+<div class="tooltip" id="tt"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+// ------------------------------------------------------------------ state
+const state = { period: "recent", reg: "all", story: "on", selected: "R34", band: null };
+const fmt = d3.format(",.0f"), pct = d3.format(".0%");
+const aed = v => v >= 1e6 ? "AED " + d3.format(".2~f")(v / 1e6) + "M" : "AED " + d3.format(",.0f")(v / 1e3) + "k";
+const LINES = [
+  { key: "Red",   name: "Red Line",   color: "var(--red-line)" },
+  { key: "Tram",  name: "Dubai Tram", color: "var(--tram)" },
+  { key: "Green", name: "Green Line", color: "var(--green-line)" }];
+// Interchanges: drawn as rings on the secondary line, data lives on the primary station
+const INTERCHANGE = { G20: "R18", G26: "R19", T3: "R37", T5: "R36" };
+const VENUE_GROUPS = [
+  { name: "Food & nightlife", cats: ["Food", "Nightlife Spot"], color: "var(--series-1)" },
+  { name: "Shops & services", cats: ["Shop & Service"], color: "var(--series-2)" },
+  { name: "Leisure & outdoors", cats: ["Arts & Entertainment", "Outdoors & Recreation", "Event"], color: "var(--series-3)" },
+  { name: "Work & study", cats: ["Professional & Other Places", "College & University"], color: "var(--series-4)" },
+  { name: "Travel & residences", cats: ["Travel & Transport", "Residence"], color: "var(--series-5)" }];
+const SEG_COLORS = ["var(--series-1)", "var(--series-2)", "var(--series-3)", "var(--series-4)", "var(--series-5)", "var(--series-6)"];
+const tt = d3.select("#tt");
+function showTip(ev, html) { tt.html(html).style("opacity", 1); moveTip(ev); }
+function moveTip(ev) {
+  const w = tt.node().offsetWidth, x = ev.clientX + 14 + w > innerWidth ? ev.clientX - w - 14 : ev.clientX + 14;
+  tt.style("left", x + "px").style("top", (ev.clientY + 12) + "px");
+}
+function hideTip() { tt.style("opacity", 0); }
+
+Promise.all([d3.json("../data/vis1_stations.json"), d3.json("../data/communities.geojson")]).then(([data, geo]) => {
+  const byCode = new Map(data.stations.map(s => [s.code, s]));
+  const num = c => +c.replace(/\D/g, "");
+  // Station order per track (schematic). Route 2020 branch continues the Red line after Jabal Ali (R38).
+  const order = {
+    Red: data.stations.filter(s => s.route === "Red" && num(s.code) < 70).sort((a, b) => num(a.code) - num(b.code)),
+    Green: data.stations.filter(s => s.route === "Green").sort((a, b) => num(a.code) - num(b.code)),
+    Tram: data.stations.filter(s => s.route === "Tram" && s.code !== "T2").sort((a, b) => num(a.code) - num(b.code))
+  };
+  const route2020 = data.stations.filter(s => (s.route === "Red" && num(s.code) >= 70) || s.route === "Expo")
+                                 .sort((a, b) => (a.route === "Expo") - (b.route === "Expo") || num(a.code) - num(b.code));
+
+  // ---------------------------------------------------------------- layout constants
+  const STEP = 25, LEFT = 112, PRICE_H = 118, VEN_H = 34, LABEL_H = 92, GAP = 22;
+  const TRACK_H = PRICE_H + 20 + VEN_H + LABEL_H;
+  const redCount = order.Red.length + route2020.length;
+  const W = LEFT + redCount * STEP + 12, H = LINES.length * (TRACK_H + GAP) + 10;
+  const yMax = 50000;
+  const y = d3.scaleLinear().domain([0, yMax]).range([PRICE_H, 0]);
+  const venMax = d3.max(data.stations, s => s.venues ? d3.sum(Object.values(s.venues)) : 0);
+  const vy = d3.scaleLinear().domain([0, venMax]).range([0, VEN_H]);
+  const allN = d3.max(data.stations.filter(s => s.code !== "NONE"), s => d3.max(Object.values(s.stats), t => t ? t.n : 0));
+  const r = d3.scaleSqrt().domain([0, allN]).range([0, 11]);
+
+  const svg = d3.select("#strip").html("").append("svg").attr("width", W).attr("height", H).attr("viewBox", [0, 0, W, H]);
+  const defs = svg.append("defs");
+  // 45° hatch pattern (texture = "far from station")
+  LINES.forEach(L => {
+    const p = defs.append("pattern").attr("id", "hatch-" + L.key).attr("patternUnits", "userSpaceOnUse")
+      .attr("width", 4).attr("height", 4).attr("patternTransform", "rotate(45)");
+    p.append("rect").attr("width", 4).attr("height", 4).attr("fill", "#fff");
+    p.append("line").attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", 4).attr("stroke", L.color).attr("stroke-width", 2.2);
+  });
+
+  const tracks = {};
+  LINES.forEach((L, i) => {
+    const g = svg.append("g").attr("class", "track").attr("transform", `translate(0,${10 + i * (TRACK_H + GAP)})`);
+    tracks[L.key] = g;
+    const stations = L.key === "Red" ? order.Red.concat(route2020) : order[L.key];
+    const lineY = PRICE_H + 12;
+    const x = (j) => LEFT + j * STEP + STEP / 2;
+    g.append("text").attr("class", "track-title").attr("x", 0).attr("y", 14).text(L.name);
+    g.append("text").attr("class", "track-sub").attr("x", 0).attr("y", 30).text("AED per m²");
+    // grid + axis
+    const ax = g.append("g").attr("class", "axis").attr("transform", `translate(${LEFT - 6},0)`)
+      .call(d3.axisLeft(y).ticks(5).tickFormat(d => d === 0 ? "0" : d / 1000 + "k").tickSize(3));
+    g.append("g").attr("class", "gridline").attr("transform", `translate(${LEFT - 6},0)`)
+      .call(d3.axisLeft(y).ticks(5).tickSize(-(stations.length * STEP + 6)).tickFormat(""));
+    g.append("rect").attr("class", "bandrect").attr("x", LEFT - 6).attr("width", stations.length * STEP + 6)
+      .attr("fill", "var(--text-primary)").attr("fill-opacity", .05).attr("display", "none");
+    // brush on the axis strip
+    const brush = d3.brushY().extent([[LEFT - 40, 0], [LEFT - 6, PRICE_H]])
+      .on("brush end", ev => onBrush(ev, L.key));
+    g.append("g").attr("class", "brush").attr("data-line", L.key).call(brush);
+    tracks[L.key].brush = brush;
+    // the line itself
+    const mainN = L.key === "Red" ? order.Red.length : stations.length;
+    g.append("line").attr("x1", x(0) - 8).attr("x2", x(mainN - 1) + 8).attr("y1", lineY).attr("y2", lineY)
+      .attr("stroke", L.color).attr("stroke-width", 6).attr("stroke-linecap", "round");
+    if (L.key === "Red") {
+      g.append("line").attr("x1", x(mainN - 1) + 8).attr("x2", x(stations.length - 1) + 6).attr("y1", lineY).attr("y2", lineY)
+        .attr("stroke", L.color).attr("stroke-width", 6).attr("stroke-opacity", .35).attr("stroke-linecap", "round");
+      g.append("text").attr("class", "track-sub").attr("x", x(mainN) - 6).attr("y", lineY - 8)
+        .text("Route 2020 (opened 2021)");
+    }
+    const st = g.selectAll("g.station").data(stations, d => d.code).join("g")
+      .attr("class", "station").attr("transform", (d, j) => `translate(${x(j)},0)`);
+    st.append("g").attr("class", "glyph");
+    st.append("circle").attr("class", "sdot").attr("cy", lineY).attr("fill", "#fff").attr("stroke", L.color).attr("stroke-width", 2);
+    st.append("g").attr("class", "venues").attr("transform", `translate(0,${lineY + 10})`);
+    st.append("text").attr("class", "station-label").attr("transform", `translate(3,${lineY + 14 + VEN_H}) rotate(50)`)
+      .text(d => INTERCHANGE[d.code] ? d.name + " ⇄" : /^Stations? R7/.test(d.name) ? d.code : d.name.replace("Burj Khalifa / Dubai Mall", "Burj Khalifa/Dubai Mall"));
+    st.append("rect").attr("class", "station-hit").attr("x", -STEP / 2).attr("width", STEP).attr("y", 0)
+      .attr("height", lineY + 14 + VEN_H + 40).attr("fill", "transparent")
+      .on("mouseenter", (ev, d) => showTip(ev, tipHtml(d))).on("mousemove", moveTip).on("mouseleave", hideTip)
+      .on("click", (ev, d) => { state.selected = INTERCHANGE[d.code] || d.code; update(); });
+    g.lineY = lineY;
+  });
+  const annot = svg.append("g").attr("class", "annot");
+
+  // ---------------------------------------------------------------- legend
+  const lg = d3.select("#legend");
+  lg.html(`<span><svg width="22" height="16"><line x1="11" x2="11" y1="1" y2="15" stroke="#52514e"/><rect x="6" y="4" width="10" height="8" rx="2" fill="#52514e" fill-opacity=".55"/><line x1="6" x2="16" y1="8" y2="8" stroke="#fff" stroke-width="2"/></svg>price per m² (P10–P90, P25–P75, median)</span>
+    <span><svg width="14" height="14"><rect x="1" y="1" width="12" height="12" rx="2" fill="url(#hatch-Red)" stroke="var(--red-line)"/></svg> typical sale &gt; 2 km away</span>
+    <span><svg width="26" height="16"><circle cx="6" cy="8" r="3" fill="#fff" stroke="#52514e" stroke-width="2"/><circle cx="18" cy="8" r="7" fill="#fff" stroke="#52514e" stroke-width="2"/></svg>circle area = sales</span>` +
+    VENUE_GROUPS.map(v => `<span><span class="sw" style="background:${v.color}"></span>${v.name}</span>`).join(""));
+
+  // ---------------------------------------------------------------- helpers
+  const key = () => `${state.period}|${state.reg}`;
+  const stat = d => { const s = byCode.get(INTERCHANGE[d.code] || d.code); return s && s.stats[key()]; };
+  const inBand = t => !state.band || (t && t.q[2] >= state.band[0] && t.q[2] <= state.band[1]);
+  function tipHtml(d) {
+    const t = stat(d), v = d.venues ? d3.sum(Object.values(d.venues)) : null;
+    let h = `<div class="t-title">${d.name} <span class="muted">${d.code}</span></div>`;
+    if (INTERCHANGE[d.code]) h += `<div class="t-note">Interchange: sales are recorded under ${byCode.get(INTERCHANGE[d.code]).name} (${INTERCHANGE[d.code]}).</div>`;
+    if (t) {
+      h += `<div class="t-row"><span>Sales (10% sample)</span><span>${fmt(t.n)}</span></div>
+        <div class="t-row"><span>Median AED/m²</span><span>${fmt(t.q[2])}</span></div>
+        <div class="t-row"><span>Middle 50%</span><span>${fmt(t.q[1])}–${fmt(t.q[3])}</span></div>
+        <div class="t-row"><span>Median price</span><span>${aed(t.price)}</span></div>
+        <div class="t-row"><span>Off-plan share</span><span>${pct(t.offplan)}</span></div>` +
+        (t.dist != null ? `<div class="t-row"><span>Median distance</span><span>${t.dist} km</span></div>` : "");
+    } else if (!INTERCHANGE[d.code]) h += `<div class="t-note">No residential sales attributed for this filter.</div>`;
+    if (v != null) h += `<div class="t-row"><span>Venues around</span><span>${v}</span></div>`;
+    return h;
+  }
+
+  function onBrush(ev, lineKey) {
+    if (!ev.sourceEvent) return;
+    svg.selectAll("g.brush").filter(function () { return this.dataset.line !== lineKey; }).call(sel => sel.each(function () {
+      d3.select(this).call(tracks[this.dataset.line].brush.move, null); }));
+    state.band = ev.selection ? [y.invert(ev.selection[1]), y.invert(ev.selection[0])] : null;
+    update(false);
+  }
+
+  // ---------------------------------------------------------------- main update
+  function update(redrawPanel = true) {
+    const T = d3.transition().duration(450);
+    LINES.forEach(L => {
+      const g = tracks[L.key], lineY = g.lineY;
+      g.select(".bandrect").attr("display", state.band ? null : "none")
+        .attr("y", state.band ? y(state.band[1]) : 0).attr("height", state.band ? y(state.band[0]) - y(state.band[1]) : 0);
+      const st = g.selectAll("g.station");
+      st.classed("sel", d => (INTERCHANGE[d.code] || d.code) === state.selected)
+        .classed("dim", d => state.band && !(stat(d) && inBand(stat(d))));
+      st.select(".sdot").transition(T).attr("r", d => {
+        if (INTERCHANGE[d.code]) return 5;
+        const t = stat(d); return t ? Math.max(3.5, r(t.n)) : 3; })
+        .attr("stroke-width", d => INTERCHANGE[d.code] ? 3 : 2)
+        .attr("fill", d => stat(d) && !INTERCHANGE[d.code] ? "#fff" : "var(--surface-0)");
+      // price glyph
+      st.select(".glyph").each(function (d) {
+        const t = INTERCHANGE[d.code] ? null : stat(d);
+        const gg = d3.select(this);
+        const q = t ? t.q.map(v => Math.min(v, yMax)) : null;
+        const far = t && t.dist != null && t.dist > 2;
+        const parts = [
+          { k: "wh", tag: "line", attrs: q ? { x1: 0, x2: 0, y1: y(q[0]), y2: y(q[4]), stroke: L.color, "stroke-width": 1.5 } : null },
+          { k: "box", tag: "rect", attrs: q ? { x: -5, width: 10, y: y(q[3]), height: Math.max(2, y(q[1]) - y(q[3])), rx: 2,
+              fill: far ? `url(#hatch-${L.key})` : L.color, stroke: L.color, "stroke-width": 1, "fill-opacity": far ? 1 : .8 } : null },
+          { k: "med", tag: "line", attrs: q ? { x1: -5, x2: 5, y1: y(q[2]), y2: y(q[2]), stroke: far ? L.color : "#fff", "stroke-width": 2.5 } : null },
+          { k: "cap", tag: "path", attrs: q && t.q[4] > yMax ? { d: `M-3,${y(yMax) + 3}L0,${y(yMax) - 1}L3,${y(yMax) + 3}`, stroke: L.color, fill: "none" } : null }];
+        parts.forEach(p => {
+          let el = gg.select("." + p.k);
+          if (!p.attrs) { el.remove(); return; }
+          if (el.empty()) el = gg.append(p.tag).attr("class", p.k).attr("y1", PRICE_H).attr("y2", PRICE_H).attr("y", PRICE_H);
+          const tr = el.transition(T);
+          Object.entries(p.attrs).forEach(([a, v]) => (a === "fill" || a === "stroke" ? el.attr(a, v) : tr.attr(a, v)));
+        });
+      });
+      // venue stack (static, but drawn once here)
+      st.select(".venues").each(function (d) {
+        const gg = d3.select(this);
+        if (!gg.selectAll("rect").empty() || !d.venues) return;
+        let acc = 0;
+        VENUE_GROUPS.forEach(vg => {
+          const v = d3.sum(vg.cats, c => d.venues[c] || 0); if (!v) return;
+          gg.append("rect").attr("x", -4).attr("width", 8).attr("y", vy(acc) + (acc ? 1 : 0)).attr("height", Math.max(0.5, vy(v) - (acc ? 1 : 0)))
+            .attr("fill", vg.color).attr("rx", 1.5);
+          acc += v;
+        });
+      });
+    });
+    drawAnnotations();
+    if (redrawPanel) drawPanel(); else bandNote();
+  }
+
+  function bandNote() {
+    const el = d3.select("#bandnote");
+    if (!state.band) { el.text("Tip: drag vertically on any price axis to set a budget band (AED/m²)."); return; }
+    const hits = data.stations.filter(s => s.code !== "NONE" && s.stats[key()] && inBand(s.stats[key()]));
+    el.html(`Band <b class="num">${fmt(state.band[0])}–${fmt(state.band[1])}</b> AED/m²: <b>${hits.length}</b> stations have a median inside it. <a href="#" id="clearband">clear</a>`);
+    d3.select("#clearband").on("click", e => { e.preventDefault(); state.band = null;
+      svg.selectAll("g.brush").each(function () { d3.select(this).call(tracks[this.dataset.line].brush.move, null); }); update(false); });
+  }
+
+  // ---------------------------------------------------------------- story annotations
+  function drawAnnotations() {
+    annot.selectAll("*").remove();
+    if (state.story !== "on") return;
+    const pos = code => { // absolute position of a station
+      for (const L of LINES) {
+        const node = tracks[L.key].selectAll("g.station").filter(d => d.code === code);
+        if (!node.empty()) { const tr = node.attr("transform").match(/translate\(([\d.]+),/); const ty = +tracks[L.key].attr("transform").match(/,([\d.]+)\)/)[1];
+          return { x: +tr[1], y: ty, lineY: tracks[L.key].lineY }; }
+      } };
+    const notes = [];
+    const a = pos("R15"), b = pos("R20");
+    if (a && b) notes.push({ x1: a.x, x2: b.x, y: a.y + 84, text: ["Old Deira / Bur Dubai core:", "almost no freehold sales"], bracket: true });
+    const j = pos("R34");
+    const tj = stat(byCode.get("R34"));
+    if (j && tj && tj.dist > 2) notes.push({ x: j.x, y: j.y + 8, text: `"Nearest" is ${tj.dist} km away: JVC buyers can't walk to it`, anchorRight: true });
+    const g = pos("G30"); const tg = stat(byCode.get("G30"));
+    if (g && tg) notes.push({ x: g.x, y: g.y + 8, text: "Creek Harbour: priced like Downtown", anchorRight: true });
+    notes.forEach(n => {
+      const gg = annot.append("g");
+      if (n.bracket) {
+        gg.append("path").attr("d", `M${n.x1 - 10},${n.y + 6}V${n.y}H${n.x2 + 10}V${n.y + 6}`);
+        const t = gg.append("text").attr("x", (n.x1 + n.x2) / 2).attr("y", n.y - 20).attr("text-anchor", "middle");
+        n.text.forEach((line, i) => t.append("tspan").attr("x", (n.x1 + n.x2) / 2).attr("dy", i ? 13 : 0).text(line));
+      } else {
+        gg.append("line").attr("x1", n.x).attr("x2", n.x - 14).attr("y1", n.y + 16).attr("y2", n.y + 4);
+        gg.append("text").attr("x", n.x - 17).attr("y", n.y + 3).attr("text-anchor", "end").text(n.text);
+      }
+    });
+  }
+
+  // ---------------------------------------------------------------- side panel
+  const proj = d3.geoMercator();
+  const urban = { type: "MultiPoint", coordinates: [[55.02, 24.95], [55.45, 25.30]] }; // fit the urban area, not the desert
+  proj.fitExtent([[2, 2], [346, 248]], urban);
+  const path = d3.geoPath(proj);
+  const mapSvg = d3.select("#p-map");
+  mapSvg.append("clipPath").attr("id", "mapclip").append("rect").attr("width", 348).attr("height", 250);
+  const mapG = mapSvg.append("g").attr("clip-path", "url(#mapclip)");
+  const commPaths = mapG.append("g").selectAll("path").data(geo.features).join("path").attr("d", path)
+    .attr("fill", "#e9e7e1").attr("stroke", "#fff").attr("stroke-width", .6);
+  const linesG = mapG.append("g");
+  const metroPts = route => data.stations.filter(s => s.lat && (route === "Red" ? (s.route === "Red" && num(s.code) < 70) : s.route === route))
+    .sort((a, b) => num(a.code) - num(b.code)).map(s => proj([s.lon, s.lat]));
+  const r2020 = [byCode.get("R38")].concat(route2020).map(s => proj([s.lon, s.lat]));
+  [["Red", "var(--red-line)"], ["Green", "var(--green-line)"]].forEach(([k, c]) =>
+    linesG.append("path").attr("d", d3.line()(metroPts(k))).attr("stroke", c).attr("stroke-width", 2).attr("fill", "none"));
+  linesG.append("path").attr("d", d3.line()(r2020)).attr("stroke", "var(--red-line)").attr("stroke-opacity", .4).attr("stroke-width", 2).attr("fill", "none");
+  const selMark = mapG.append("g");
+  commPaths.on("mouseenter", (ev, f) => { const c = data.comms[f.properties.c];
+      const t = stat(byCode.get(state.selected)); const hit = t && t.comms.find(x => x[0] === f.properties.c);
+      showTip(ev, `<div class="t-title">${c.known}</div><div class="t-note">${c.name}</div>` + (hit ? `<div class="t-row"><span>Sales via this station</span><span>${hit[1]}</span></div>` : "")); })
+    .on("mousemove", moveTip).on("mouseleave", hideTip);
+
+  function drawPanel() {
+    bandNote();
+    const s = byCode.get(state.selected), t = s && s.stats[key()];
+    const D = data.dubai[key()];
+    d3.select("#p-kicker").text(`${s.route === "Tram" ? "Dubai Tram" : s.route + " Line"} · ${s.code}`);
+    d3.select("#p-title").text(s.name);
+    d3.select("#p-sub").text(t ? `${fmt(t.n)} residential sales in the 10% sample (≈ ${fmt(t.n * 10)} in the full register)` : "No residential sales attributed to this station for this filter.");
+    const k = t ? [
+      [fmt(t.q[2]), "median AED/m²", t.q[2] / D.q[2] - 1], [aed(t.price), "median price"], [pct(t.offplan), "off-plan"],
+      [t.size + " m²", "median size"], [t.dist != null ? t.dist + " km" : "n/a", "median distance"],
+      [s.venues ? d3.sum(Object.values(s.venues)) : "n/a", "venues around"]] : [];
+    d3.select("#p-kpis").html(k.map(([v, l, delta]) => `<div class="kpi"><div class="v">${v}</div><div class="l">${l}${delta != null ? ` · <b>${delta > 0 ? "+" : ""}${pct(delta)}</b> vs Dubai` : ""}</div></div>`).join(""));
+    drawHist(t, D); drawWaffle(t); drawMap(s, t);
+    d3.select("#p-comms").html(t ? t.comms.map(([c, n]) => `<li><span>${data.comms[c].known}</span><span>${n}</span></li>`).join("") : "");
+  }
+
+  function drawHist(t, D) {
+    const svgH = d3.select("#p-hist"); svgH.selectAll("*").remove();
+    const W = 348, H = 120, m = { l: 6, r: 6, t: 8, b: 22 };
+    const bins = data.logBins, x = d3.scaleLog().domain([1000, 100000]).range([m.l, W - m.r]);
+    const norm = h => { const s = d3.sum(h); return h.map(v => s ? v / s : 0); };
+    const dn = norm(D.hist), sn = t ? norm(t.hist) : null;
+    const yy = d3.scaleLinear().domain([0, d3.max(dn.concat(sn || []))]).range([H - m.b, m.t]);
+    svgH.append("g").attr("class", "axis").attr("transform", `translate(0,${H - m.b})`)
+      .call(d3.axisBottom(x).tickValues([1000, 3000, 10000, 30000, 100000]).tickFormat(d => d / 1000 + "k").tickSize(3));
+    if (sn) svgH.append("g").selectAll("rect").data(sn).join("rect")
+      .attr("x", (d, i) => x(10 ** bins[i]) + 1).attr("width", (d, i) => x(10 ** bins[i + 1]) - x(10 ** bins[i]) - 2)
+      .attr("y", d => yy(d)).attr("height", d => H - m.b - yy(d)).attr("rx", 1.5).attr("fill", "var(--series-1)");
+    const stepLine = d3.line().curve(d3.curveStepAfter);
+    const pts = dn.map((d, i) => [x(10 ** bins[i]), yy(d)]).concat([[x(10 ** bins[bins.length - 1]), yy(dn[dn.length - 1])]]);
+    svgH.append("path").attr("d", stepLine(pts)).attr("fill", "none").attr("stroke", "var(--text-primary)").attr("stroke-width", 1.5);
+    svgH.append("text").attr("x", m.l).attr("y", 12).attr("text-anchor", "start").attr("font-size", 11)
+      .html(`<tspan fill="var(--series-1)">■ this station</tspan>  <tspan fill="var(--text-primary)">— all Dubai</tspan>`);
+  }
+
+  function drawWaffle(t) {
+    const svgW = d3.select("#p-waffle"); svgW.selectAll("*").remove();
+    if (!t) { d3.select("#p-waffle-legend").html(""); return; }
+    const total = d3.sum(t.mix); if (!total) return;
+    // largest-remainder rounding to exactly 100 cells
+    const raw = t.mix.map(v => v / total * 100), cells = raw.map(Math.floor);
+    let left = 100 - d3.sum(cells);
+    raw.map((v, i) => [v - Math.floor(v), i]).sort((a, b) => b[0] - a[0]).slice(0, left).forEach(([, i]) => cells[i]++);
+    const seq = cells.flatMap((c, i) => d3.range(c).map(() => i));
+    const sz = 9.4, gap = 1.6;
+    svgW.selectAll("rect").data(seq).join("rect")
+      .attr("x", (d, i) => Math.floor(i / 10) * (sz + gap) * 1 + Math.floor(i / 50) * 6)
+      .attr("y", (d, i) => (i % 10) * (sz + gap)).attr("width", sz).attr("height", sz).attr("rx", 2)
+      .attr("fill", d => SEG_COLORS[d]);
+    const g2 = svgW.append("g").attr("transform", "translate(124,4)");
+    data.segs.forEach((sname, i) => {
+      const row = g2.append("g").attr("transform", `translate(${(i % 2) * 112},${Math.floor(i / 2) * 30})`);
+      row.append("rect").attr("width", 10).attr("height", 10).attr("rx", 2).attr("fill", SEG_COLORS[i]).attr("y", 2);
+      row.append("text").attr("x", 15).attr("y", 11).attr("font-size", 12).attr("fill", "var(--text-primary)").text(sname);
+      row.append("text").attr("x", 15).attr("y", 24).attr("font-size", 11).attr("class", "num").text(`${cells[i]}%  (${t.mix[i]})`);
+    });
+    d3.select("#p-waffle-legend").html(`<span class="muted">Studio … 4BR+ are apartments; Villa includes townhouses.</span>`);
+  }
+
+  function drawMap(s, t) {
+    const counts = new Map(t ? t.comms : []);
+    const cmax = d3.max([...counts.values()]) || 1;
+    const col = d3.scaleSequential([0, cmax], d3.interpolateRgb("#cde2fb", "#184f95"));
+    commPaths.transition().duration(300).attr("fill", f => counts.has(f.properties.c) ? col(counts.get(f.properties.c)) : "#e9e7e1");
+    selMark.selectAll("*").remove();
+    if (s.lat) {
+      const [px, py] = proj([s.lon, s.lat]);
+      selMark.append("circle").attr("cx", px).attr("cy", py).attr("r", 6).attr("fill", "#fff").attr("stroke", "var(--text-primary)").attr("stroke-width", 2.5);
+      // connector lines from station to its top communities (shows "nearest" ≠ near)
+      t && t.comms.forEach(([c]) => { const f = geo.features.find(ff => ff.properties.c === c); if (!f) return;
+        const [cx, cy] = path.centroid(f);
+        selMark.insert("line", "circle").attr("x1", px).attr("y1", py).attr("x2", cx).attr("y2", cy)
+          .attr("stroke", "var(--text-primary)").attr("stroke-width", 1).attr("stroke-opacity", .55); });
+    }
+    d3.select("#p-map-note").text(s.lat ? "Shaded: communities whose sales were attributed to this station (darker = more). Lines join the station (white dot) to them."
+      : "Tram stop coordinates are not in the course files, so only the communities are shaded.");
+  }
+
+  // ---------------------------------------------------------------- "no station" summary
+  (function noStation() {
+    const t = byCode.get("NONE").stats["recent|all"], tot = data.dubai["recent|all"].n;
+    d3.select("#nostation").html(`<div class="kicker">The missing third</div><h2>${fmt(t.n)} of ${fmt(tot)} residential sales in 2021–2026 (${pct(t.n / tot)}) have <i>no</i> nearest station in the DLD file</h2>
+      <div class="sub">Their median is <b class="num">${fmt(t.q[2])}</b> AED/m² and <b>${pct(t.offplan)}</b> are off-plan: mostly new master communities on the desert edge, which are the parts of Dubai that have no rail at all. Top communities: ${t.comms.slice(0, 5).map(([c, n]) => `${data.comms[c].known} (${n})`).join(", ")}.</div>`);
+  })();
+
+  // ---------------------------------------------------------------- controls
+  d3.selectAll(".seg").each(function () {
+    const seg = d3.select(this), k = this.dataset.key;
+    seg.selectAll("button").on("click", function () {
+      seg.selectAll("button").classed("on", false); d3.select(this).classed("on", true);
+      state[k] = this.dataset.v; update();
+    });
+  });
+  update();
+});
+</script>
+</body>
+</html>

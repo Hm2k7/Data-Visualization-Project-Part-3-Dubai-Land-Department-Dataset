@@ -1,0 +1,68 @@
+{
+ "cleaning": [
+  {
+   "rule": "1 date window 2015..2026-09-17",
+   "rows_before": 89212,
+   "rows_after": 67548,
+   "removed": 21664,
+   "why": "sparse/implausible early dates"
+  },
+  {
+   "rule": "2 sales only",
+   "rows_before": 67548,
+   "rows_after": 51731,
+   "removed": 15817,
+   "why": "mortgages & gifts are not market prices"
+  },
+  {
+   "rule": "3 residential units & villas",
+   "rows_before": 51731,
+   "rows_after": 42413,
+   "removed": 9318,
+   "why": "land/buildings not comparable per m2"
+  },
+  {
+   "rule": "4 price/size sanity bounds",
+   "rows_before": 42413,
+   "rows_after": 42323,
+   "removed": 90,
+   "why": "zero, symbolic or implausible prices/sizes"
+  }
+ ],
+ "anomalies": {
+  "weekday_2015_2021": {
+   "Mon": 8130,
+   "Tue": 4218,
+   "Wed": 4197,
+   "Thu": 4104,
+   "Fri": 299,
+   "Sat": 0,
+   "Sun": 0
+  },
+  "note_weekday": "Before 2022 Sunday was a working day in Dubai, yet the file has zero Sunday transactions and Monday has ~2x the volume of any other weekday: Sunday registrations appear folded into Monday. We therefore never analyse below monthly granularity.",
+  "missing_nearest_metro_pct": 32.0,
+  "tram_stops_in_metro_column": 8246,
+  "stations_with_zero_transactions": [
+   "R32 Mall of the Emirates",
+   "R70-R75 + Expo (Route 2020, opened 2021)",
+   "G20/G26 (interchanges recorded under Red line)"
+  ],
+  "id_year_vs_date_year_mismatch": 3437,
+  "max_actual_worth": 11428300546,
+  "min_meter_sale_price": 0.0,
+  "max_meter_sale_price": 10856666.67,
+  "annualise_2026": 1.4038461538461537,
+  "residential_sales_clean": 42323
+ },
+ "rules": [
+  "1. Keep 2015-01-01 .. 2026-09-17 (same window as Parts 1-2; earlier years are",
+  "   sparse and include implausible dates such as 1967). 2026 is a partial year:",
+  "   counts are annualised x1.404 where a yearly volume is compared.",
+  "2. Keep trans_group 'Sales' only: mortgages and gifts are not market prices.",
+  "3. Keep residential Units and Villas (usage = Residential); land/buildings have",
+  "   no comparable price per m2.",
+  "4. Price sanity: 1,000 <= AED/m2 <= 100,000, 15 <= size <= 5,000 m2,",
+  "   price >= AED 100,000 (removes zero/symbolic and implausible values).",
+  "5. Robust statistics only (medians, quantiles); bootstrap CIs for uncertainty."
+ ]
+}

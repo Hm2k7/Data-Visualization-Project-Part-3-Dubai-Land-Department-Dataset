@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dubai Real Estate · CS333 Part 3 · Group 3</title>
+<link rel="stylesheet" href="assets/common.css">
+<style>
+  .hero { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; align-items: end; margin-bottom: 18px; }
+  @media (max-width: 960px) { .hero { grid-template-columns: 1fr; } }
+  .team { font-size: 13px; color: var(--text-secondary); }
+  .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  @media (max-width: 1100px) { .cards { grid-template-columns: 1fr; } }
+  .vcard { display: flex; flex-direction: column; text-decoration: none; color: inherit; background: var(--surface-1); border: 1px solid var(--rule);
+    border-radius: 14px; overflow: hidden; transition: transform .12s, box-shadow .12s; }
+  .vcard:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,.08); }
+  .vcard img { width: 100%; height: 210px; object-fit: cover; object-position: top left; border-bottom: 1px solid var(--rule); background: var(--surface-0); }
+  .vcard .body { padding: 14px 16px 16px; }
+  .vcard h2 { font-size: 17px; margin: 4px 0 6px; }
+  .vcard p { margin: 0 0 8px; color: var(--text-secondary); font-size: 13px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { font-size: 11px; font-family: var(--mono); background: var(--surface-0); border-radius: 6px; padding: 2px 7px; color: var(--text-secondary); }
+  .who { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+  table.q { border-collapse: collapse; width: 100%; font-size: 13px; }
+  table.q td, table.q th { border-bottom: 1px solid var(--rule); padding: 6px 8px; text-align: left; vertical-align: top; }
+  table.q th { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); font-weight: 500; }
+  table.q td.num { text-align: right; white-space: nowrap; }
+  .two { display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; margin-top: 14px; }
+  @media (max-width: 1100px) { .two { grid-template-columns: 1fr; } }
+  ol.refs { font-size: 13px; color: var(--text-secondary); padding-left: 20px; margin: 6px 0 0; }
+  ol.refs li { margin-bottom: 5px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="hero">
+    <div>
+      <div class="kicker">CS333 Introduction to Data Visualization · Project Part 3 · Group 3</div>
+      <h1 style="font-size:34px">Dubai real estate, three new ways to look at it</h1>
+      <p class="lede" style="margin-bottom:0">Three interactive D3 visualizations built on the Dubai Land Department transactions (10% sample), combined with the course's community boundaries, metro stations, population and Foursquare venues. Each one answers a question that a <b>city planner</b>, an <b>investor/developer</b> or a <b>buyer</b> would ask, and none of them is a time-series line, a weekday bar chart or a choropleth like Parts 1 and 2.</p>
+    </div>
+    <div class="team">Hassan Mousa (24000292) · Khalid Albadda (24000542) · Osama Mohammed (24001318)<br>Presentation slot: <b>[fill in your booked slot]</b></div>
+  </div>
+
+  <div class="cards">
+    <a class="vcard" href="vis1-metro/index.html">
+      <img src="assets/thumb1.png" alt="Strip map of the Red line, tram and Green line with price glyphs above each station">
+      <div class="body"><div class="kicker">Visualization 1 · city planners</div>
+        <h2>Along the Line</h2>
+        <p>Every metro and tram station as a schematic strip map with a price glyph, sales volume and venue mix, linked to a station profile (histogram, waffle and geographic catchment map).</p>
+        <div class="tags"><span class="tag">strip map</span><span class="tag">box glyphs</span><span class="tag">texture</span><span class="tag">brushing</span><span class="tag">linked views ×4</span></div>
+        <div class="who">Owner: Hassan Mousa</div></div></a>
+    <a class="vcard" href="vis2-trajectories/index.html">
+      <img src="assets/thumb2.png" alt="Grid map of communities with sparklines and VSUP colours next to a connected scatterplot">
+      <div class="body"><div class="kicker">Visualization 2 · investors & developers</div>
+        <h2>Boom Paths</h2>
+        <p>A grid map of 54 communities whose colour suppresses unreliable values (VSUP), linked to connected scatterplots that trace each community through the 2015–2026 cycle.</p>
+        <div class="tags"><span class="tag">grid map</span><span class="tag">VSUP uncertainty</span><span class="tag">connected scatterplot</span><span class="tag">animation</span></div>
+        <div class="who">Owner: Khalid Albadda</div></div></a>
+    <a class="vcard" href="vis3-ranker/index.html">
+      <img src="assets/thumb3.png" alt="LineUp-style ranking table with stacked score bars, a map of the top 10 and a dot plot of prices">
+      <div class="body"><div class="kicker">Visualization 3 · buyers</div>
+        <h2>Where Should I Buy?</h2>
+        <p>A LineUp-style multi-criteria ranking with weight sliders and personas, linked to a top-10 map and a unit dot plot that checks every recent sale against your budget.</p>
+        <div class="tags"><span class="tag">LineUp ranking</span><span class="tag">stacked scores</span><span class="tag">unit dot plot</span><span class="tag">what-if</span></div>
+        <div class="who">Owner: Osama Mohammed</div></div></a>
+  </div>
+
+  <div class="two">
+    <div class="card">
+      <h2>How we dealt with data quality</h2>
+      <div class="sub">All numbers are produced by <span class="num">prep/prepare_data.py</span> and stored in <span class="num">data/cleaning_log.json</span>.</div>
+      <table class="q" id="qtable"><tr><th>Step</th><th>Rows before</th><th>Removed</th><th>Why</th></tr></table>
+      <h2 style="margin-top:14px">Anomalies we found (and what we did)</h2>
+      <table class="q" id="atable"></table>
+    </div>
+    <div class="card">
+      <h2>Research behind the designs</h2>
+      <div class="sub">Each visualization adapts a published technique to this data.</div>
+      <ol class="refs">
+        <li>Wu, Niedermann, Takahashi, Roberts & Nöllenburg (2020). <i>A Survey on Transit Map Layout.</i> CGF / EuroVis STAR: schematic transit maps → Vis 1 strip map.</li>
+        <li>Mohammad, Graham & Melo (2017). <i>The effect of the Dubai Metro on the value of residential and commercial properties.</i> J. Transport and Land Use 10(1); and CBRE (2023) <i>Dubai Metro Report</i>: the metro-premium question behind Vis 1.</li>
+        <li>Correll, Moritz & Heer (2018). <i>Value-Suppressing Uncertainty Palettes.</i> CHI → Vis 2 tile colours and wedge legend.</li>
+        <li>Meulemans, Dykes, Slingsby, Turkay & Wood (2017). <i>Small Multiples with Gaps.</i> IEEE TVCG 23(1) → Vis 2 grid map.</li>
+        <li>Haroz, Kosara & Franconeri (2016). <i>The Connected Scatterplot for Presenting Paired Time Series.</i> IEEE TVCG 22(9) → Vis 2 trajectories.</li>
+        <li>Gratzl, Lex, Gehlenborg, Pfister & Streit (2013). <i>LineUp: Visual Analysis of Multi-Attribute Rankings.</i> IEEE TVCG 19(12) → Vis 3.</li>
+        <li>Weng et al. (2018). <i>Homefinder Revisited: Finding Ideal Homes with Reachability-Centric Multi-Criteria Decision Making.</i> CHI; and Li et al. (2018). <i>HomeSeeker.</i> JVLC → Vis 3 task design.</li>
+        <li>Park, Drucker, Fernandez & Elmqvist (2018). <i>ATOM: A Grammar for Unit Visualizations.</i> IEEE TVCG 24(12) → Vis 3 budget dot plot.</li>
+        <li>Borgo et al. (2013). <i>Glyph-based Visualization: Foundations, Design Guidelines, Techniques and Applications.</i> Eurographics STAR → Vis 1 station glyphs.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+d3.json("data/cleaning_log.json").then(L => {
+  const f = d3.format(",");
+  d3.select("#qtable").selectAll("tr.r").data(L.cleaning).join("tr").attr("class", "r")
+    .html(d => `<td>${d.rule.replace(/^\d /, "")}</td><td class="num">${f(d.rows_before)}</td><td class="num">${f(d.removed)}</td><td>${d.why}</td>`);
+  const a = L.anomalies, wd = a.weekday_2015_2021;
+  const rows = [
+    ["Sunday missing, Monday doubled", `2015–2021: Mon ${f(wd.Mon)} vs Tue ${f(wd.Tue)}, Sun ${wd.Sun}. Sunday was a working day before 2022, so Sunday registrations seem to be folded into Monday. We never go below monthly granularity.`],
+    ["Implausible dates", `Dates back to 1967, and ${f(a.id_year_vs_date_year_mismatch)} rows whose transaction-ID year differs from the date year. We kept 2015 onwards.`],
+    ["Zero / extreme prices", `AED/m² from ${a.min_meter_sale_price} to ${f(Math.round(a.max_meter_sale_price))}; one transaction worth AED ${f(a.max_actual_worth)}. Bounded and summarised with medians.`],
+    ["Station names", `${a.missing_nearest_metro_pct}% have no nearest station; ${f(a.tram_stops_in_metro_column)} rows name a tram stop; renamed stations and a typo. Mapped to station codes (Vis 1).`],
+    ["Stations without sales", a.stations_with_zero_transactions.join("; ") + "."],
+    ["Partial 2026", `Data ends 17 Sep 2026; yearly volumes for 2026 are annualised ×${a.annualise_2026.toFixed(3)} and drawn hollow.`],
+    ["Venue cap", "dubai_venues.csv holds at most 100 venues per community, so we show 100+ and use ranks, not counts."]];
+  d3.select("#atable").selectAll("tr").data(rows).join("tr").html(d => `<td style="width:170px"><b>${d[0]}</b></td><td>${d[1]}</td>`);
+});
+</script>
+</body>
+</html>

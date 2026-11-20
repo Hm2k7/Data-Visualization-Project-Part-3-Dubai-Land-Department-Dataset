@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boom Paths · Dubai community price/volume trajectories</title>
+<link rel="stylesheet" href="../assets/common.css">
+<style>
+  .layout { display: grid; grid-template-columns: 820px minmax(0, 1fr); gap: 14px; align-items: start; }
+  @media (max-width: 1380px) { .layout { grid-template-columns: 1fr; } }
+  .tile { cursor: pointer; }
+  .tile text.code { font-size: 10.5px; font-weight: 600; }
+  .tile text.val { font-size: 9.5px; font-family: var(--mono); }
+  .yearbar { display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; }
+  .yearbar input { flex: 1; }
+  .yearbar .yr { font-family: var(--mono); font-size: 20px; font-weight: 500; width: 64px; }
+  .play { font: inherit; border: 1px solid var(--rule-strong); background: var(--surface-1); border-radius: 7px; padding: 4px 12px; cursor: pointer; }
+  .selchips { display: flex; gap: 8px; flex-wrap: wrap; min-height: 26px; margin-bottom: 4px; }
+  .selchips .chip { display: inline-flex; align-items: center; gap: 6px; }
+  .selchips .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .readguide text { font-size: 10.5px; }
+  .phase text { font-size: 11px; fill: var(--text-muted); font-style: italic; }
+  .pt { cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="crumbs"><a href="../index.html">CS333 Part 3 · Group 3</a> / Visualization 2</div>
+  <h1>Boom Paths: how each community travelled through Dubai's property cycle</h1>
+  <p class="lede">Left: a <b>grid map</b>: every square is a community, roughly where it sits in Dubai, with its price line for 2015–2026. The square's colour uses a <b>value-suppressing uncertainty palette</b>: the less reliable a number is (small sample, wide bootstrap interval), the greyer and coarser its colour. Right: click up to three squares to compare their <b>connected scatterplots</b> (volume vs price, one dot per year) against all of Dubai.</p>
+
+  <div class="controls">
+    <div><label class="title">Square colour</label>
+      <span class="seg" data-key="metric"><button data-v="level" class="on">Price level 2024–26</button><button data-v="growth">Growth vs 2018–20</button><button data-v="offplan">Off-plan share</button></span></div>
+    <div><label class="title">Uncertainty</label>
+      <span class="seg" data-key="vsup"><button data-v="on" class="on">VSUP</button><button data-v="off">Ignore (plain)</button></span></div>
+    <div><label class="title">Notes</label>
+      <span class="seg" data-key="story"><button data-v="on" class="on">Story</button><button data-v="off">Off</button></span></div>
+  </div>
+
+  <div class="layout">
+    <div class="card">
+      <h2 id="g-title">Grid map of 54 communities</h2>
+      <div class="sub" id="g-sub"></div>
+      <svg id="grid"></svg>
+      <div style="display:flex; gap:22px; align-items:flex-start; margin-top:6px">
+        <svg id="vsup-legend" width="360" height="182"></svg>
+        <div class="sub" style="max-width:440px; margin-top:16px" id="legend-text"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Connected scatterplot: sales volume vs price, year by year</h2>
+      <div class="sub">Each dot is a year; the line connects the years in order. Right = more sales, up = higher price per m². Hollow dot = 2026 (Jan to mid-Sep, volume annualised ×<span id="ann"></span>).</div>
+      <div class="selchips" id="chips"></div>
+      <svg id="cs"></svg>
+      <div class="yearbar"><button class="play" id="play">▶ Play</button><input type="range" id="year" min="2015" max="2026" step="1" value="2026"><span class="yr" id="yrlabel">2026</span></div>
+    </div>
+  </div>
+
+  <details class="notes" open>
+    <summary>Encoding, interaction & data notes</summary>
+    <div class="cols">
+      <div><h3>Encoding</h3><ul>
+        <li><b>Grid map</b>: one square per community with ≥ 100 clean residential sales. Squares are placed in a 13×11 grid by a greedy assignment that keeps each community as close as possible to its true centroid (a <i>small-multiples grid map</i>, Meulemans et al. 2017).</li>
+        <li><b>Line inside the square</b>: median AED/m² by year, 2015–2026, on one shared scale (0–40k) for all squares. The dot marks the year on the slider.</li>
+        <li><b>Square colour (VSUP)</b>: hue/lightness = value; greying and fewer colour steps = higher uncertainty (90% bootstrap interval). Very unreliable squares collapse to one grey.</li>
+        <li><b>Connected scatterplot</b>: x = sales per year (log scale, 10% sample), y = median AED/m², one dot per year joined in time order; colour = community identity (max 3), grey = all of Dubai.</li></ul></div>
+      <div><h3>Interaction</h3><ul>
+        <li>Hover a square: name, DLD name, value with its 90% interval and sample size.</li>
+        <li>Click a square: add or remove it in the connected scatterplot (up to 3; the oldest drops out).</li>
+        <li>Year slider / Play: draws the paths up to that year and moves the year marker in every square, so both views stay in sync.</li>
+        <li>Switch the colour metric, or turn VSUP off to see how much the plain palette over-states small samples.</li></ul></div>
+      <div><h3>Data & cleaning</h3><ul>
+        <li>Clean residential sales (see prep script). A yearly median needs ≥ 5 sales, otherwise the year is left out.</li>
+        <li>Growth = median AED/m² 2024–26 ÷ median 2018–20 − 1. Its interval comes from 1,000 bootstrap resamples of both periods.</li>
+        <li>Growth mixes real price change with a change in <i>what</i> is sold (for example, more luxury off-plan launches). Read it as "how much more the typical m² sold for", not as a like-for-like index.</li>
+        <li>2026 volume is annualised (×1.404); prices are not.</li>
+        <li>Names: DLD community names (e.g. <i>Al Barsha South Fourth</i>) are shown with their market name (<i>JVC</i>) from the dominant <span class="num">master_project_en</span>.</li></ul></div>
+    </div>
+  </details>
+</div>
+<div class="tooltip" id="tt"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+const state = { metric: "level", vsup: "on", story: "on", year: 2026, selected: [681, 345, 648] };
+const SLOT = ["var(--series-1)", "var(--series-2)", "var(--series-3)"];   // max 3 (all-pairs validated)
+const SLOT_HEX = ["#2a78d6", "#eb6834", "#1baf7a"];
+const fmt = d3.format(",.0f"), pct = d3.format("+.0%"), pct0 = d3.format(".0%");
+const tt = d3.select("#tt");
+const showTip = (ev, h) => { tt.html(h).style("opacity", 1); moveTip(ev); };
+function moveTip(ev) { const w = tt.node().offsetWidth; tt.style("left", (ev.clientX + 14 + w > innerWidth ? ev.clientX - w - 14 : ev.clientX + 14) + "px").style("top", (ev.clientY + 12) + "px"); }
+const hideTip = () => tt.style("opacity", 0);
+
+// ------------------------------------------------------------ VSUP (Correll, Moritz & Heer, CHI 2018)
+const METRICS = {
+  level:   { label: "Median AED/m², 2024–26", domain: [6000, 36000], fmt: v => fmt(v), ufmt: (m) => `${fmt(m.lo)}–${fmt(m.hi)}`,
+             thr: [0.02, 0.04, 0.07], uLabel: "±% of median", uTicks: ["<2%", "2–4%", "4–7%", ">7%"] },
+  growth:  { label: "Growth of median AED/m² (2018–20 → 2024–26)", domain: [0, 2], fmt: v => pct(v), ufmt: m => `${pct(m.lo)} to ${pct(m.hi)}`,
+             thr: [0.10, 0.20, 0.35], uLabel: "± pts", uTicks: ["<10", "10–20", "20–35", ">35"] },
+  offplan: { label: "Off-plan share of sales, 2024–26", domain: [0, 1], fmt: v => pct0(v), ufmt: m => `${pct0(m.lo)}–${pct0(m.hi)}`,
+             thr: [0.03, 0.05, 0.08], uLabel: "± pts", uTicks: ["<3", "3–5", "5–8", ">8"] }
+};
+const RAMP = ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#2a78d6", "#1c5cab", "#184f95", "#0d366b"]; // blue 100→700
+const ramp = d3.scaleLinear().domain(d3.range(RAMP.length).map(i => i / (RAMP.length - 1))).range(RAMP).interpolate(d3.interpolateLab).clamp(true);
+const SUPPRESS_GREY = "#d6d4ce";
+function uLevel(m, u) { const t = METRICS[m].thr; return u < t[0] ? 0 : u < t[1] ? 1 : u < t[2] ? 2 : 3; }
+// returns {fill, level, t}
+function vsupColor(metric, val, u, on = true) {
+  const [a, b] = METRICS[metric].domain;
+  const t = Math.max(0, Math.min(0.9999, (val - a) / (b - a)));
+  const L = on ? uLevel(metric, u) : 0;
+  const bins = 2 ** (3 - L);                               // 8, 4, 2, 1 colour steps
+  const tq = (Math.floor(t * bins) + 0.5) / bins;          // snap to the bin centre
+  const base = ramp(tq);
+  return { fill: d3.interpolateLab(base, SUPPRESS_GREY)(L * 0.27), level: L, t: tq };
+}
+const darkFill = c => d3.lab(c).l < 55;
+
+Promise.all([d3.json("../data/vis2_trajectories.json")]).then(([data]) => {
+  d3.select("#ann").text(data.annualise2026.toFixed(3));
+  const comms = data.comms, byC = new Map(comms.map(c => [c.c, c]));
+
+  // ---------------------------------------------------------- grid map layout (greedy nearest free cell)
+  const COLS = 13, ROWS = 11, TS = 60, PAD = 2;
+  const kx = Math.cos(25.15 * Math.PI / 180);
+  const lonE = d3.extent(comms, c => c.lon), latE = d3.extent(comms, c => c.lat);
+  const gx = d3.scaleLinear().domain(lonE).range([0.5, COLS - 1.5]);
+  const gy = d3.scaleLinear().domain(latE).range([ROWS - 1.5, 0.5]);   // north up
+  const taken = new Set();
+  [...comms].sort((a, b) => b.n - a.n).forEach(c => {
+    const tx = gx(c.lon), ty = gy(c.lat);
+    let best = null, bd = Infinity;
+    for (let i = 0; i < COLS; i++) for (let j = 0; j < ROWS; j++) {
+      if (taken.has(i + "," + j)) continue;
+      const d = (i - tx) ** 2 + (j - ty) ** 2;
+      if (d < bd) { bd = d; best = [i, j]; }
+    }
+    taken.add(best.join(",")); c.gi = best[0]; c.gj = best[1];
+  });
+  const GW = COLS * TS, GH = ROWS * TS;
+  const grid = d3.select("#grid").attr("width", GW).attr("height", GH);
+  // faint coastline hint: the Gulf is to the north-west
+  grid.append("text").attr("x", 6).attr("y", 16).attr("font-size", 11).attr("fill", "var(--text-muted)").text("↖ Arabian Gulf");
+  grid.append("text").attr("x", GW - 6).attr("y", GH - 6).attr("text-anchor", "end").attr("font-size", 11).attr("fill", "var(--text-muted)").text("desert / Dubailand ↘");
+  const sx = d3.scaleLinear().domain([2015, 2026]).range([6, TS - PAD * 2 - 6]);
+  const sy = d3.scaleLinear().domain([0, 40000]).range([TS - PAD * 2 - 5, 27]).clamp(true);
+  const spark = d3.line().defined(d => d.med != null).x(d => sx(d.y)).y(d => sy(d.med));
+  const tiles = grid.selectAll("g.tile").data(comms, d => d.c).join("g").attr("class", "tile")
+    .attr("transform", d => `translate(${d.gi * TS + PAD},${d.gj * TS + PAD})`);
+  tiles.append("rect").attr("class", "bg").attr("width", TS - PAD * 2).attr("height", TS - PAD * 2).attr("rx", 5);
+  tiles.append("rect").attr("class", "selring").attr("x", -1).attr("y", -1).attr("width", TS - PAD * 2 + 2).attr("height", TS - PAD * 2 + 2)
+    .attr("rx", 6).attr("fill", "none").attr("stroke-width", 3);
+  tiles.append("text").attr("class", "code").attr("x", 5).attr("y", 13).text(d => d.short);
+  tiles.append("text").attr("class", "val").attr("x", 5).attr("y", 25);
+  tiles.append("path").attr("class", "spark").attr("d", d => spark(d.traj)).attr("fill", "none").attr("stroke-width", 1.5);
+  tiles.append("circle").attr("class", "ymark").attr("r", 2.6);
+  tiles.on("mouseenter", (ev, d) => showTip(ev, tileTip(d))).on("mousemove", moveTip).on("mouseleave", hideTip)
+    .on("click", (ev, d) => { toggle(d.c); });
+
+  function tileTip(d) {
+    const m = d[state.metric], M = METRICS[state.metric];
+    const last = d.traj.filter(t => t.med != null).slice(-1)[0];
+    let h = `<div class="t-title">${d.known}</div><div class="t-note" style="margin:0 0 4px">DLD: ${d.name} · ${fmt(d.n)} sales 2015–26</div>`;
+    if (m) {
+      const c = vsupColor(state.metric, m.v, m.u);
+      h += `<div class="t-row"><span>${M.label}</span><span>${M.fmt(m.v)}</span></div>
+            <div class="t-row"><span>90% interval</span><span>${M.ufmt(m)}</span></div>
+            <div class="t-row"><span>Sample</span><span>${m.n || (m.nb + " → " + m.nn)}</span></div>
+            <div class="t-note">${["Reliable: full colour detail", "Fairly reliable: 4 colour steps", "Uncertain: 2 colour steps", "Too uncertain: shown as grey"][c.level]}</div>`;
+    } else h += `<div class="t-note">${state.metric === "growth" ? "Fewer than 8 sales in 2018–20 or 2024–26: mostly communities that were not launched yet in 2018–20." : "Not enough recent sales to compute this."}</div>`;
+    return h;
+  }
+
+  function drawTiles() {
+    const T = d3.transition().duration(400);
+    tiles.each(function (d) {
+      const g = d3.select(this), m = d[state.metric];
+      const c = m ? vsupColor(state.metric, m.v, m.u, state.vsup === "on") : null;
+      const fill = c ? c.fill : "#efeeea";
+      const dark = c && darkFill(fill);
+      g.select(".bg").transition(T).attr("fill", fill);
+      g.select(".bg").attr("stroke", c ? "none" : "var(--rule-strong)").attr("stroke-dasharray", c ? null : "2 2");
+      g.select(".code").attr("fill", dark ? "#fff" : "var(--text-primary)");
+      g.select(".val").attr("fill", dark ? "#fff" : "var(--text-secondary)")
+        .text(m ? (state.metric === "level" ? d3.format(".0f")(m.v / 1000) + "k" : METRICS[state.metric].fmt(m.v)) : "n/a");
+      g.select(".spark").attr("stroke", dark ? "#fff" : "var(--text-primary)").attr("stroke-opacity", .9);
+      const yr = d.traj.find(t => t.y === state.year);
+      g.select(".ymark").attr("display", yr && yr.med != null ? null : "none")
+        .attr("cx", sx(state.year)).attr("cy", yr && yr.med != null ? sy(yr.med) : 0)
+        .attr("fill", dark ? "#fff" : "var(--text-primary)");
+      const si = state.selected.indexOf(d.c);
+      g.select(".selring").attr("stroke", si >= 0 ? SLOT_HEX[si] : "none");
+    });
+    const M = METRICS[state.metric];
+    d3.select("#g-sub").text(`Colour: ${M.label}. Line: median AED/m² 2015–2026 (shared 0–40k scale). Click squares to compare.`);
+    drawLegend();
+  }
+
+  // ---------------------------------------------------------- VSUP wedge legend
+  function drawLegend() {
+    const svgL = d3.select("#vsup-legend"); svgL.selectAll("*").remove();
+    const M = METRICS[state.metric], cx = 175, cy = 150, R0 = 30, RW = 26, a0 = -Math.PI / 3, a1 = Math.PI / 3;
+    const arc = d3.arc();
+    const levels = state.vsup === "on" ? [0, 1, 2, 3] : [0];
+    levels.forEach(L => {
+      const bins = 2 ** (3 - L), rOut = R0 + (4 - L) * RW, rIn = rOut - RW + 1.5;
+      for (let b = 0; b < bins; b++) {
+        const t = (b + 0.5) / bins;
+        const val = M.domain[0] + t * (M.domain[1] - M.domain[0]);
+        const col = vsupColor(state.metric, val, L === 0 ? 0 : M.thr[L - 1] + 1e-6, state.vsup === "on").fill;
+        svgL.append("path").attr("transform", `translate(${cx},${cy})`)
+          .attr("d", arc({ innerRadius: rIn, outerRadius: rOut, startAngle: a0 + (a1 - a0) * b / bins + 0.004, endAngle: a0 + (a1 - a0) * (b + 1) / bins - 0.004 }))
+          .attr("fill", col);
+      }
+      if (state.vsup === "on") svgL.append("text").attr("x", cx + Math.sin(a1) * (rOut - RW / 2) + 6).attr("y", cy - Math.cos(a1) * (rOut - RW / 2) + 4)
+        .attr("font-size", 10).attr("class", "num").text(M.uTicks[L]);
+    });
+    const rTop = R0 + 4 * RW + 6;
+    [0, 0.5, 1].forEach(t => {
+      const a = a0 + (a1 - a0) * t, v = M.domain[0] + t * (M.domain[1] - M.domain[0]);
+      svgL.append("text").attr("x", cx + Math.sin(a) * rTop).attr("y", cy - Math.cos(a) * rTop - 2)
+        .attr("text-anchor", t === 0 ? "end" : t === 1 ? "start" : "middle").attr("font-size", 10.5).attr("class", "num")
+        .text(state.metric === "level" ? fmt(v) : M.fmt(v));
+    });
+    if (state.vsup === "on") svgL.append("text").attr("x", 300).attr("y", 178).attr("font-size", 10).attr("text-anchor", "middle")
+      .attr("fill", "var(--text-muted)").text("uncertainty " + M.uLabel);
+    d3.select("#legend-text").html(state.vsup === "on"
+      ? `<b>How to read the colour.</b> Go along the arc for the value (darker blue = higher). Go towards the centre for <i>less reliable</i> values: they get greyer and use fewer colour steps (8 → 4 → 2 → 1), so a small, noisy sample can't look as precise as a large one. Uncertainty = half-width of the 90% bootstrap interval.`
+      : `<b>Plain palette (VSUP off).</b> Every square gets one of 8 value steps whatever its sample size. Compare with VSUP: squares that look as confident as JVC here are actually based on a few dozen sales.`);
+  }
+
+  // ---------------------------------------------------------- connected scatterplot
+  const CW = 560, CH = 470, m = { l: 58, r: 120, t: 14, b: 44 };
+  const cs = d3.select("#cs").attr("width", CW).attr("height", CH).attr("viewBox", [0, 0, CW, CH]);
+  cs.append("defs").html(SLOT_HEX.concat(["#8a8880"]).map((c, i) =>
+    `<marker id="arr${i}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,1L9,5L0,9z" fill="${c}"/></marker>`).join(""));
+  const xg = cs.append("g").attr("class", "axis").attr("transform", `translate(0,${CH - m.b})`);
+  const yg = cs.append("g").attr("class", "axis").attr("transform", `translate(${m.l},0)`);
+  const gridG = cs.append("g").attr("class", "gridline");
+  const phaseG = cs.append("g").attr("class", "phase");
+  const pathsG = cs.append("g");
+  cs.append("text").attr("x", CW - m.r).attr("y", CH - 8).attr("text-anchor", "end").attr("font-size", 11).text("sales per year in the 10% sample (log scale) →");
+  cs.append("text").attr("transform", `translate(14,${m.t}) rotate(90)`).attr("font-size", 11).text("median AED per m² →");
+  const x = d3.scaleLog().range([m.l, CW - m.r]);
+  const y = d3.scaleLinear().range([CH - m.b, m.t]);
+
+  function series() {
+    const out = state.selected.map((c, i) => ({ id: c, name: byC.get(c).known, color: SLOT_HEX[i], slot: i, pts: byC.get(c).traj }));
+    out.push({ id: "dubai", name: "All of Dubai", color: "#8a8880", slot: 3, pts: data.dubai });
+    return out;
+  }
+
+  function drawScatter() {
+    const S = series();
+    const allPts = S.flatMap(s => s.pts.filter(p => p.med != null && p.nA > 0));
+    x.domain([Math.max(3, d3.min(allPts, p => p.nA) * 0.8), d3.max(allPts, p => p.nA) * 1.25]).nice();
+    y.domain([0, d3.max(allPts, p => p.med) * 1.08]).nice();
+    xg.call(d3.axisBottom(x).ticks(6, "~s").tickSize(3));
+    yg.call(d3.axisLeft(y).ticks(6).tickFormat(d => d / 1000 + "k").tickSize(3));
+    gridG.selectAll("line").data(y.ticks(6)).join("line").attr("x1", m.l).attr("x2", CW - m.r).attr("y1", d => y(d)).attr("y2", d => y(d));
+    const visible = s => s.pts.filter(p => p.med != null && p.nA > 0 && p.y <= state.year);
+    const groups = pathsG.selectAll("g.ser").data(S, d => d.id).join(enter => {
+      const g = enter.append("g").attr("class", "ser");
+      g.append("path").attr("class", "trail").attr("fill", "none");
+      g.append("g").attr("class", "pts");
+      g.append("text").attr("class", "lbl").attr("font-size", 12).attr("font-weight", 600);
+      g.append("g").attr("class", "yrs");
+      return g;
+    });
+    groups.each(function (s) {
+      const g = d3.select(this), pts = visible(s);
+      const isD = s.id === "dubai";
+      // insert segment midpoints so marker-mid draws a direction arrow halfway between years
+      const xy = pts.map(p => [x(p.nA), y(p.med)]);
+      const withMid = xy.flatMap((q, i) => i ? [[(xy[i - 1][0] + q[0]) / 2, (xy[i - 1][1] + q[1]) / 2], q] : [q]);
+      g.select(".trail").attr("d", d3.line()(withMid))
+        .attr("stroke", s.color).attr("stroke-width", isD ? 2 : 2).attr("stroke-opacity", isD ? .7 : .9)
+        .attr("marker-mid", `url(#arr${s.slot})`);
+      g.select(".pts").selectAll("circle").data(pts, p => p.y).join("circle").attr("class", "pt")
+        .attr("cx", p => x(p.nA)).attr("cy", p => y(p.med)).attr("r", p => p.y === state.year ? 6 : 4)
+        .attr("fill", p => p.y === 2026 ? "#fff" : s.color).attr("stroke", p => p.y === 2026 ? s.color : "#fff").attr("stroke-width", p => p.y === 2026 ? 2 : 1.5)
+        .on("mouseenter", (ev, p) => showTip(ev, `<div class="t-title">${s.name} · ${p.y}</div>
+          <div class="t-row"><span>Sales (sample${p.y === 2026 ? ", annualised" : ""})</span><span>${fmt(p.nA)}</span></div>
+          <div class="t-row"><span>Median AED/m²</span><span>${fmt(p.med)}</span></div>
+          <div class="t-row"><span>Off-plan share</span><span>${pct0(p.op)}</span></div>`))
+        .on("mousemove", moveTip).on("mouseleave", hideTip);
+      const last = pts[pts.length - 1], first = pts[0];
+      s._ly = last ? y(last.med) + 4 : null;
+      g.select(".lbl").attr("display", last ? null : "none").attr("x", last ? x(last.nA) + 9 : 0).attr("y", last ? y(last.med) + 4 : 0)
+        .attr("fill", isD ? "var(--text-secondary)" : "var(--text-primary)").text(s.name);
+      const yrs = [first, last].filter((p, i, a) => p && (i === 0 || p !== a[0]));
+      g.select(".yrs").selectAll("text").data(yrs, p => p.y).join("text").attr("font-size", 10).attr("class", "num")
+        .attr("x", p => x(p.nA)).attr("y", p => y(p.med) - 9).attr("text-anchor", "middle").attr("fill", "var(--text-muted)").text(p => p.y);
+    });
+    // nudge end labels apart (simple 1-D collision avoidance, 14px minimum gap)
+    const lbls = S.filter(s2 => s2._ly != null).sort((a, b) => a._ly - b._ly);
+    for (let i = 1; i < lbls.length; i++) if (lbls[i]._ly - lbls[i - 1]._ly < 14) lbls[i]._ly = lbls[i - 1]._ly + 14;
+    groups.each(function (s2) { if (s2._ly != null) d3.select(this).select(".lbl").attr("y", s2._ly); });
+    // phase notes for the Dubai path
+    phaseG.selectAll("*").remove();
+    if (state.story === "on") {
+      const d = data.dubai, at = yy => d.find(p => p.y === yy);
+      const p1 = at(2017), p2 = at(2023);
+      const p0 = at(2015);
+      if (state.year >= 2019) { const t = phaseG.append("text").attr("x", x(p0.nA) - 30).attr("y", y(p1.med) + 30);
+        t.append("tspan").text("Dubai 2015–20: flat volume,"); t.append("tspan").attr("x", x(p0.nA) - 30).attr("dy", 13).text("prices drift down"); }
+      if (state.year >= 2023) { const t = phaseG.append("text").attr("x", x(p2.nA) + 12).attr("y", y(p2.med) + 22);
+        t.append("tspan").text("2021–25: boom,"); t.append("tspan").attr("x", x(p2.nA) + 12).attr("dy", 13).text("both rise together"); }
+    }
+    // chips
+    d3.select("#chips").html("").selectAll("span").data(S.filter(s => s.id !== "dubai")).join("span").attr("class", "chip on")
+      .style("background", "var(--surface-1)").style("color", "var(--text-primary)").style("border-color", "var(--rule-strong)")
+      .html(s => `<span class="dot" style="background:${s.color}"></span>${s.name} <span class="muted">✕</span>`)
+      .on("click", (ev, s) => toggle(s.id));
+  }
+
+  function toggle(c) {
+    const i = state.selected.indexOf(c);
+    if (i >= 0) state.selected.splice(i, 1);
+    else { state.selected.push(c); if (state.selected.length > 3) state.selected.shift(); }
+    drawTiles(); drawScatter();
+  }
+
+  // ---------------------------------------------------------- year slider + play
+  const slider = d3.select("#year"), yl = d3.select("#yrlabel");
+  slider.on("input", function () { state.year = +this.value; yl.text(state.year); drawTiles(); drawScatter(); });
+  let timer = null;
+  d3.select("#play").on("click", function () {
+    if (timer) { timer.stop(); timer = null; d3.select(this).text("▶ Play"); return; }
+    d3.select(this).text("❚❚ Pause");
+    state.year = 2015;
+    timer = d3.interval(() => {
+      slider.property("value", state.year); yl.text(state.year); drawTiles(); drawScatter();
+      if (state.year >= 2026) { timer.stop(); timer = null; d3.select("#play").text("▶ Play"); } else state.year++;
+    }, 700);
+  });
+
+  d3.selectAll(".seg").each(function () {
+    const seg = d3.select(this), k = this.dataset.key;
+    seg.selectAll("button").on("click", function () {
+      seg.selectAll("button").classed("on", false); d3.select(this).classed("on", true);
+      state[k] = this.dataset.v; drawTiles(); drawScatter();
+    });
+  });
+  d3.select("#g-title").text(`Grid map of ${comms.length} communities`);
+  drawTiles(); drawScatter();
+});
+</script>
+</body>
+</html>

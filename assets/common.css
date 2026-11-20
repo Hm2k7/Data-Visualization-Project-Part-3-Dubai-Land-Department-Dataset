@@ -1,0 +1,74 @@
+/* Shared look for the three CS333 Part 3 visualizations (Group 3). */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+:root {
+  color-scheme: light;
+  --surface-0: #f4f3ef;      /* page */
+  --surface-1: #fcfcfb;      /* chart surface */
+  --rule: #e4e2dc;           /* hairlines, grid */
+  --rule-strong: #c9c6bd;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #8a8880;
+  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100;
+  --series-5: #e87ba4; --series-6: #008300; --series-7: #6250d6; --series-8: #e34948;
+  --red-line: #e34948; --green-line: #008300; --tram: #6250d6;
+  --accent: #2a78d6;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--surface-0); color: var(--text-primary); font-family: var(--sans); font-size: 14px; line-height: 1.45; }
+a { color: var(--accent); }
+.page { max-width: 1480px; margin: 0 auto; padding: 22px 28px 48px; }
+.crumbs { font-size: 12px; color: var(--text-muted); letter-spacing: .02em; }
+.crumbs a { color: var(--text-secondary); text-decoration: none; }
+.crumbs a:hover { text-decoration: underline; }
+h1 { font-size: 26px; line-height: 1.15; margin: 6px 0 4px; font-weight: 700; letter-spacing: -.01em; }
+.lede { color: var(--text-secondary); max-width: 920px; margin: 0 0 14px; font-size: 15px; }
+.kicker { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); }
+
+.controls { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; padding: 10px 14px; background: var(--surface-1);
+  border: 1px solid var(--rule); border-radius: 10px; margin-bottom: 14px; }
+.controls label.title { font-size: 11px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-right: 6px; }
+.seg { display: inline-flex; border: 1px solid var(--rule-strong); border-radius: 7px; overflow: hidden; }
+.seg button { font: inherit; font-size: 13px; padding: 5px 11px; border: 0; background: transparent; color: var(--text-secondary); cursor: pointer; border-right: 1px solid var(--rule); }
+.seg button:last-child { border-right: 0; }
+.seg button:hover { background: #efede8; }
+.seg button.on { background: var(--text-primary); color: #fff; }
+.chip { font: inherit; font-size: 12px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--rule-strong); background: var(--surface-1); cursor: pointer; color: var(--text-secondary); }
+.chip:hover { border-color: var(--text-secondary); }
+.chip.on { background: var(--text-primary); color: #fff; border-color: var(--text-primary); }
+
+.card { background: var(--surface-1); border: 1px solid var(--rule); border-radius: 12px; padding: 14px 16px; }
+.card h2 { font-size: 15px; margin: 0 0 2px; font-weight: 600; }
+.card .sub { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+.grid { display: grid; gap: 14px; }
+
+svg { fill: var(--text-secondary); }   /* inherited by text without its own fill attribute */
+svg text { font-family: var(--sans); }
+svg .axis path, svg .axis line { stroke: var(--rule-strong); }
+svg .axis text { font-size: 11px; fill: var(--text-muted); font-family: var(--mono); }
+svg .gridline line { stroke: var(--rule); }
+svg .gridline path { display: none; }
+
+.tooltip { position: fixed; pointer-events: none; z-index: 50; background: #fff; border: 1px solid var(--rule-strong); border-radius: 8px;
+  padding: 8px 10px; font-size: 12px; box-shadow: 0 6px 22px rgba(0,0,0,.12); max-width: 300px; opacity: 0; transition: opacity .08s; }
+.tooltip b { color: var(--text-primary); }
+.tooltip .t-title { font-weight: 600; font-size: 13px; color: var(--text-primary); margin-bottom: 3px; }
+.tooltip .t-row { display: flex; justify-content: space-between; gap: 14px; color: var(--text-secondary); }
+.tooltip .t-row span:last-child { font-family: var(--mono); color: var(--text-primary); }
+.tooltip .t-note { color: var(--text-muted); margin-top: 4px; font-size: 11px; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--text-secondary); align-items: center; }
+.legend .sw { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+
+details.notes { margin-top: 18px; background: var(--surface-1); border: 1px solid var(--rule); border-radius: 12px; padding: 0 16px; }
+details.notes summary { cursor: pointer; padding: 12px 0; font-weight: 600; }
+details.notes .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; padding-bottom: 14px; font-size: 13px; color: var(--text-secondary); }
+details.notes h3 { font-size: 12px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin: 6px 0; }
+details.notes ul { padding-left: 18px; margin: 0; }
+.num { font-family: var(--mono); }
+.muted { color: var(--text-muted); }
+.loading { padding: 40px; text-align: center; color: var(--text-muted); font-family: var(--mono); }
+input[type=range] { accent-color: var(--text-primary); }
