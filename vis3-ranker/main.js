@@ -1,5 +1,5 @@
 /* =====================================================================
-   Vis 3 · "Where should I buy?" ranker          owner: Osama Mohammed
+   Vis 3 - "Where should I buy?" ranker          owner: Osama Mohammed
    ---------------------------------------------------------------------
    Question: given my budget, home type and priorities, which
    communities fit me best, and why?
@@ -26,9 +26,9 @@ const COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300"
 // The 8 criteria. higher: true = a bigger raw value is better.
 // raw: true = keep the raw 0..1 share instead of a percentile rank.
 const CRIT = [
-  { k: "fit", name: "Budget fit", hint: "share of sales ≤ budget", fmt: (v) => pct(v), higher: true, raw: true },
+  { k: "fit", name: "Budget fit", hint: "share of sales within budget", fmt: (v) => pct(v), higher: true, raw: true },
   { k: "value", name: "Value", hint: "low median AED/m²", fmt: (v) => fmt(v) + "/m²", higher: false },
-  { k: "growth", name: "Momentum", hint: "real price growth since 2018–20 (after inflation)", fmt: (v) => pctSigned(v) + " real", higher: true },
+  { k: "growth", name: "Momentum", hint: "real price growth since 2018-20 (after inflation)", fmt: (v) => pctSigned(v) + " real", higher: true },
   { k: "liq", name: "Liquidity", hint: "many recent sales", fmt: (v) => fmt(v) + " sales", higher: true },
   { k: "ready", name: "Ready / Off-plan", hint: "share matching your preference", fmt: (v) => pct(v), higher: true },
   { k: "metro", name: "Metro access", hint: "km to nearest station", fmt: (v) => v.toFixed(1) + " km", higher: false },
@@ -36,7 +36,7 @@ const CRIT = [
   { k: "estab", name: "Established", hint: "residents per km² (2019)", fmt: (v) => fmt(v) + "/km²", higher: true },
 ];
 
-// Personas: home type, budget, ready/off-plan, and one weight (0–5) per criterion
+// Personas: home type, budget, ready/off-plan, and one weight (0-5) per criterion
 const PRESETS = {
   "First-time buyer": { seg: "1BR", budget: 1.2e6, pref: "ready", w: [5, 3, 1, 2, 3, 4, 3, 1] },
   Family: { seg: "Villa", budget: 4e6, pref: "ready", w: [5, 2, 1, 1, 4, 1, 2, 3] },
@@ -59,10 +59,10 @@ const REASON = {
 };
 
 // =====================================================================
-// STEP 1 · Load the data
+// STEP 1, Load the data
 // vis3_ranker.json is made by prep/prepare_data.py: one record per
 // community (growth after inflation, metro distance, venues, density)
-// plus every cleaned 2024–26 sale as [community, type, price, m², off-plan, year].
+// plus every cleaned 2024-26 sale as [community, type, price, m², off-plan, year].
 // =====================================================================
 Promise.all([
   d3.json("../data/vis3_ranker.json"),
@@ -71,7 +71,7 @@ Promise.all([
 
 function start(data, geo) {
   // =====================================================================
-  // STEP 2 · State, scoring and scales
+  // STEP 2, State, scoring and scales
   // =====================================================================
 
   // seg: home type; budget in AED; pref: "ready" | "offplan"; w: 8 weights
@@ -88,7 +88,7 @@ function start(data, geo) {
   data.sales.forEach(([c, seg, price, m2, op, yr]) => byC.get(c).sales.push({ seg, price, m2, op, yr }));
 
   // --- scales -------------------------------------------------------------
-  // Budget slider: a LOG scale, so AED 300k–1M gets as much slider room as 3M–10M.
+  // Budget slider: a LOG scale, so AED 300k-1M gets as much slider room as 3M-10M.
   const budgetScale = d3.scaleLog().domain([3e5, 2e7]).range([0, 1000]);
   // Score 0..1 -> bar length in pixels
   const sx = d3.scaleLinear().domain([0, 1]).range([0, SW]);
@@ -156,7 +156,7 @@ function start(data, geo) {
   }
 
   // =====================================================================
-  // STEP 3 · Draw
+  // STEP 3, Draw
   // =====================================================================
 
   // --- controls built from data --------------------------------------------
@@ -165,7 +165,7 @@ function start(data, geo) {
   d3.select("#presets").selectAll("button").data(Object.keys(PRESETS)).join("button")
     .attr("class", "chip").text((d) => d);
   d3.select("#weights").selectAll("div").data(CRIT).join("div").attr("class", "w")
-    .html((d, i) => `<div class="top"><span><span class="sw2" style="background:${COLORS[i]}"></span><b>${d.name}</b></span><span class="num" id="wv${i}"></span></div>
+    .html((d, i) => `<div class="top"><span><span class="sw2" style="background:${COLORS[i]}"></span><span class="wname">${d.name}</span></span><span class="num" id="wv${i}"></span></div>
       <input type="range" min="0" max="5" step="1" id="w${i}"><div class="hint">${d.hint}</div>`);
 
   // --- table frame -------------------------------------------------------------
@@ -201,7 +201,7 @@ function start(data, geo) {
       if (k === "Expo") return; // drawn as part of the Red branch
       if (k === "Red") {
         mapG.append("path").attr("d", lineOf(redMain)).attr("stroke", "var(--red-line)").attr("stroke-width", 2).attr("fill", "none");
-        mapG.append("path").attr("d", lineOf(branch)).attr("stroke", "var(--red-line)").attr("stroke-opacity", 0.45)
+        mapG.append("path").attr("d", lineOf(branch)).attr("stroke", tint("#e34948", 0.45))
           .attr("stroke-width", 2).attr("fill", "none");
         return;
       }
@@ -210,7 +210,7 @@ function start(data, geo) {
   }
 
   // =====================================================================
-  // STEP 4 · Interactions
+  // STEP 4, Interactions
   // Every handler changes `state`, then calls update().
   // =====================================================================
 
@@ -223,7 +223,7 @@ function start(data, geo) {
     update();
   });
 
-  // Weight sliders (0–5). Moving one means "custom", so no preset is highlighted.
+  // Weight sliders (0-5). Moving one means "custom", so no preset is highlighted.
   CRIT.forEach((d, i) => {
     d3.select("#w" + i).on("input", function () {
       state.w[i] = +this.value;
@@ -295,19 +295,19 @@ function start(data, geo) {
   // --- tooltip text --------------------------------------------------------
   function rowTip(d) {
     const typeWord = state.seg === "All" ? "" : state.seg + " ";
-    let h = `<div class="t-title">${d.rank ? "#" + d.rank + " " : ""}${d.known}</div><div class="t-note" style="margin:0 0 4px">DLD: ${d.name} · ${d.n} ${typeWord}sales 2024–26</div>`;
+    let h = `<div class="t-title">${d.rank ? "#" + d.rank + " " : ""}${d.known}</div><div class="t-note" style="margin:0 0 4px">DLD: ${d.name}, ${d.n} ${typeWord}sales 2024-26</div>`;
     if (!d.ranked) return h + `<div class="t-note">Fewer than 10 sales of this home type, so not ranked.</div>`;
     CRIT.forEach((cr, i) => {
       const v = d.raw[cr.k];
       const shown = v == null ? "unknown" : cr.fmt(v, d);
-      h += `<div class="t-row"><span><span class="sw2" style="background:${COLORS[i]}"></span>${cr.name}</span><span>${shown} · ${Math.round(d.s[cr.k].v * 100)}</span></div>`;
+      h += `<div class="t-row"><span><span class="sw2" style="background:${COLORS[i]}"></span>${cr.name}</span><span>${shown} (score ${Math.round(d.s[cr.k].v * 100)})</span></div>`;
     });
     const nominal = d.growth != null ? ` Nominal growth ${pctSigned(d.growth)}.` : "";
     return h + `<div class="t-note">Score ${Math.round(d.score * 100)} / 100. Nearest station: ${d.metro}.${nominal}</div>`;
   }
 
   // =====================================================================
-  // STEP 5 · Update
+  // STEP 5, Update
   // =====================================================================
   function update() {
     const R = compute();
@@ -330,7 +330,7 @@ function start(data, geo) {
     const top = R.slice(0, 3).map((d) => d.known.replace(/ \(.*\)/, ""));
     const fitTop = R[0] ? Math.round(R[0].raw.fit * 100) : 0;
     d3.select("#answer").html(top.length
-      ? `With <b>${aed(state.budget)}</b> for ${what}, your best matches are <b>${top[0]}</b>${top[1] ? `, <b>${top[1]}</b>` : ""}${top[2] ? ` and <b>${top[2]}</b>` : ""}. In ${top[0]}, ${fitTop}% of recent sales were within your budget.`
+      ? `With ${aed(state.budget)} for ${what}, your best matches are <b>${top[0]}</b>${top[1] ? `, <b>${top[1]}</b>` : ""}${top[2] ? ` and <b>${top[2]}</b>` : ""}. In ${top[0]}, ${fitTop}% of recent sales were within your budget.`
       : `No community has enough ${state.seg} sales to rank.`);
   }
 
@@ -368,7 +368,7 @@ function start(data, geo) {
         .on("mousemove", moveTip)
         .on("mouseleave", hideTip);
       g.append("rect").attr("y", 26).attr("width", AW).attr("height", 3).attr("rx", 1.5).attr("fill", COLORS[i])
-        .attr("opacity", state.w[i] ? 1 : 0.25);
+        .attr("fill", state.w[i] ? COLORS[i] : tint(COLORS[i], 0.3));
       g.append("text").attr("y", 14).attr("font-size", 10).text(SHORT[cr.k]);
       g.append("text").attr("y", HEAD - 8).attr("font-size", 10).attr("fill", "var(--text-muted)").text(state.sortBy === cr.k ? "▾" : "");
     });
@@ -395,7 +395,7 @@ function start(data, geo) {
     const enter = sel.enter().append("g").attr("class", "row").attr("opacity", 0)
       .attr("transform", `translate(0,${(rows.length + 2) * RH})`);
     enter.append("rect").attr("class", "hl").attr("x", 0).attr("width", TW).attr("height", RH - 1).attr("rx", 4);
-    enter.append("text").attr("class", "rk num").attr("x", 6).attr("y", 15.5).attr("font-weight", 600);
+    enter.append("text").attr("class", "rk num").attr("x", 6).attr("y", 15.5);
     enter.append("text").attr("class", "mv num").attr("x", 28).attr("y", 15.5).attr("font-size", 10);
     enter.append("text").attr("class", "nm").attr("x", COL.name).attr("y", 15.5);
     enter.append("g").attr("class", "stack").attr("transform", `translate(${COL.score},4)`);
@@ -409,7 +409,7 @@ function start(data, geo) {
     all.classed("excluded", (d) => !d.ranked).classed("sel", (d) => d.c === state.selected);
     all.transition(T).attr("opacity", 1).attr("transform", (d, i) => `translate(0,${i * RH})`);
 
-    all.select(".rk").text((d) => d.rank || "–");
+    all.select(".rk").text((d) => d.rank || "-");
     all.select(".mv").each(function (d) { drawRankChange(d3.select(this), d); });
     all.select(".nm").text((d) => (d.known.length > 24 ? d.known.slice(0, 23) + "…" : d.known));
     all.select(".why").each(function (d) { drawReasons(d3.select(this), d); });
@@ -444,7 +444,7 @@ function start(data, geo) {
     });
   }
 
-  // Stacked score bar: segment length = weight × criterion score
+  // Stacked score bar: segment length = weight x criterion score
   function drawScoreBar(g, d, T) {
     const parts = d.ranked ? d.parts : [];
     let acc = 0;
@@ -474,8 +474,7 @@ function start(data, geo) {
       .attr("transform", (c) => `translate(${COL.attrs + c.i * (AW + AG)},0)`)
       .each(function (c) {
         d3.select(this).select(".bar")
-          .attr("fill", c.s && c.s.missing ? "url(#hatch)" : COLORS[c.i])
-          .attr("opacity", state.w[c.i] ? 1 : 0.3)
+          .attr("fill", c.s && c.s.missing ? "url(#hatch)" : state.w[c.i] ? COLORS[c.i] : tint(COLORS[c.i], 0.3))
           .transition(T)
           .attr("width", c.s ? Math.max(1.5, c.s.v * AW) : 0);
       });
@@ -491,7 +490,7 @@ function start(data, geo) {
       .join((e) => {
         const g = e.append("g").attr("class", "mk").style("cursor", "pointer");
         g.append("circle").attr("r", 10).attr("stroke", "#fff").attr("stroke-width", 2);
-        g.append("text").attr("text-anchor", "middle").attr("dy", 4).attr("font-size", 10.5).attr("font-weight", 700).attr("fill", "#fff");
+        g.append("text").attr("text-anchor", "middle").attr("dy", 4).attr("font-size", 10.5).attr("font-weight", 600).attr("fill", "#fff");
         g.attr("transform", (d) => `translate(${at(d)})`);
         return g;
       })
@@ -506,7 +505,7 @@ function start(data, geo) {
 
     const rightSide = (d) => at(d)[0] > 230;
     markers.selectAll("text.toplab").data(top.slice(0, 3), (d) => d.c).join("text").attr("class", "toplab")
-      .attr("font-size", 11.5).attr("font-weight", 600).attr("fill", "#0b0b0b")
+      .attr("font-size", 11.5).attr("fill", "#0b0b0b")
       .style("paint-order", "stroke").style("stroke", "#fff").style("stroke-width", "4px").style("stroke-linejoin", "round")
       .attr("pointer-events", "none")
       .attr("x", (d) => at(d)[0] + (rightSide(d) ? -14 : 14))
@@ -538,8 +537,8 @@ function start(data, geo) {
     const within = ss.filter((s) => s.price <= state.budget).length;
     const typeWord = state.seg === "All" ? "" : state.seg + " ";
     d3.select("#d-sub").html(ss.length
-      ? `<span class="big">${pct(within / ss.length)}</span> of ${ss.length} ${typeWord}sales in 2024–26 were at or below ${aed(state.budget)}. Median ${aed(d3.median(ss, (s) => s.price))}, ${d3.format(",.0f")(d3.median(ss, (s) => s.m2))} m².`
-      : `No ${state.seg} sales recorded here in 2024–26.`);
+      ? `<span class="big">${pct(within / ss.length)}</span> of ${ss.length} ${typeWord}sales in 2024-26 were at or below ${aed(state.budget)}. Median ${aed(d3.median(ss, (s) => s.price))}, ${d3.format(",.0f")(d3.median(ss, (s) => s.m2))} m².`
+      : `No ${state.seg} sales recorded here in 2024-26.`);
     if (!ss.length) return;
 
     const W = 366, H = 210, m = { l: 8, r: 8, t: 10, b: 26 };
@@ -563,13 +562,15 @@ function start(data, geo) {
     svg.append("g").attr("class", "axis").attr("transform", `translate(0,${H - m.b})`)
       .call(d3.axisBottom(x).tickValues([3e5, 1e6, 3e6, 1e7, 3e7]).tickFormat((v) => (v >= 1e6 ? v / 1e6 + "M" : v / 1e3 + "k")).tickSize(3));
     svg.append("rect").attr("x", m.l).attr("y", m.t).attr("width", Math.max(0, x(state.budget) - m.l))
-      .attr("height", H - m.b - m.t).attr("fill", "#0b0b0b").attr("fill-opacity", 0.04);
+      .attr("height", H - m.b - m.t).attr("fill", "#f3f2ee");
     svg.selectAll("circle").data(dots).join("circle")
       .attr("cx", (d) => d.x)
       .attr("cy", (d) => H - m.b - 4 - d.k * (r * 2 + 0.6))
       .attr("r", r)
-      .attr("fill", (d) => (d.s.op ? COLORS[1] : COLORS[0]))
-      .attr("opacity", (d) => (d.s.price <= state.budget ? 1 : 0.45));
+      .attr("fill", (d) => {
+        const colour = d.s.op ? COLORS[1] : COLORS[0];
+        return d.s.price <= state.budget ? colour : tint(colour, 0.4); // over budget = lighter
+      });
     svg.append("line").attr("x1", x(state.budget)).attr("x2", x(state.budget)).attr("y1", m.t - 4).attr("y2", H - m.b)
       .attr("stroke", "var(--text-primary)").attr("stroke-width", 1.5);
     svg.append("text").attr("x", x(state.budget) + 4).attr("y", m.t + 6).attr("font-size", 11).attr("fill", "var(--text-primary)")

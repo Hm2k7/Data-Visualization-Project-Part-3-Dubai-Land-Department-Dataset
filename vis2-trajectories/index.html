@@ -3,37 +3,37 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Boom Paths · Dubai community price/volume trajectories</title>
+<title>Boom Paths - Dubai community price/volume trajectories</title>
 <link rel="stylesheet" href="../assets/common.css">
 <style>
   .layout { display: grid; grid-template-columns: 820px minmax(0, 1fr); gap: 14px; align-items: start; }
   @media (max-width: 1380px) { .layout { grid-template-columns: 1fr; } }
   .tile { cursor: pointer; }
-  .tile text.code { font-size: 9.5px; font-weight: 600; }
-  .tile text.val { font-size: 9px; font-family: var(--mono); }
+  .tile text.code { font-size: 9.5px; }
+  .tile text.val { font-size: 9px; }
   #cs text.lbl, #lc text.lbl { paint-order: stroke; stroke: #fcfcfb; stroke-width: 4px; stroke-linejoin: round; }
   .readhint { font-size: 11px; fill: var(--text-muted); }
   .yearbar { display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; }
   .yearbar input { flex: 1; }
-  .yearbar .yr { font-family: var(--mono); font-size: 20px; font-weight: 500; width: 64px; }
-  .play { font: inherit; border: 1px solid var(--rule-strong); background: var(--surface-1); border-radius: 7px; padding: 4px 12px; cursor: pointer; }
+  .yearbar .yr { font-size: 18px; width: 64px; }
+  .play { font: inherit; border: 1px solid var(--rule-strong); background: var(--surface-1); border-radius: 3px; padding: 4px 12px; cursor: pointer; }
   .selchips { display: flex; gap: 8px; flex-wrap: wrap; min-height: 26px; margin-bottom: 4px; }
   .selchips .chip { display: inline-flex; align-items: center; gap: 6px; }
   .selchips .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
   .readguide text { font-size: 10.5px; }
-  .phase text { font-size: 11px; fill: var(--text-muted); font-style: italic; }
+  .phase text { font-size: 11px; fill: var(--text-muted); }
   .pt { cursor: pointer; }
 </style>
 </head>
 <body>
 <div class="page">
-  <div class="crumbs"><a href="../index.html">CS333 Part 3 · Group 3</a> / Visualization 2</div>
-  <h1>Same boom, different paths: Downtown got pricier, JVC sold ten times more</h1>
-  <p class="lede">Each square is a community, placed roughly where it is in Dubai. <b style="color:#1c5cab">Blue</b> = above the Dubai average, <b style="color:#c4501f">orange</b> = below, <b>grey</b> = about the same <i>or too few sales to tell</i>. Click squares to compare them on the right.</p>
+  <div class="crumbs"><a href="../index.html">CS333 Part 3, Group 3</a> / Visualization 2</div>
+  <h1>Downtown got more expensive while JVC sold ten times more homes</h1>
+  <p class="lede">Each square is a community, placed roughly where it is in Dubai. <span style="color:#1c5cab">Blue</span> means above the Dubai average, <span style="color:#c4501f">orange</span> means below, and grey means about the same or too few sales to tell. Click squares to compare them on the right.</p>
 
   <div class="controls">
     <div><label class="title">Square colour</label>
-      <span class="seg" data-key="metric"><button data-v="level" class="on">Price level 2024–26</button><button data-v="growth">Growth vs 2018–20</button><button data-v="offplan">Off-plan share</button></span></div>
+      <span class="seg" data-key="metric"><button data-v="level" class="on">Price level 2024-26</button><button data-v="growth">Growth vs 2018-20</button><button data-v="offplan">Off-plan share</button></span></div>
     <div><label class="title">Prices</label>
       <span class="seg" data-key="real"><button data-v="nominal" class="on">Nominal AED</button><button data-v="real">Real (2015 AED)</button></span></div>
     <div><label class="title">Uncertainty</label>
@@ -54,7 +54,7 @@
     </div>
     <div class="card">
       <h2>How each community moved, year by year</h2>
-      <div class="sub">Each dot is one year, joined in order with arrows. <b>Up</b> = higher price per m²; <b>right</b> = more homes sold. Going up-and-right means a boom. Hollow dot = 2026 so far (volume scaled up to a full year ×<span id="ann"></span>).</div>
+      <div class="sub">Each dot is one year, joined in order with arrows. Up = higher price per m²; right = more homes sold. Going up-and-right means a boom. Hollow dot = 2026 so far (volume scaled up to a full year x<span id="ann"></span>).</div>
       <div class="selchips" id="chips"></div>
       <svg id="cs"></svg>
       <div class="sub" id="phase-caption" style="margin-top:2px"></div>
@@ -68,23 +68,23 @@
     <summary>Encoding, interaction & data notes</summary>
     <div class="cols">
       <div><h3>Encoding</h3><ul>
-        <li><b>Grid map</b>: one square per community with ≥ 100 clean residential sales. Squares are placed in a 13×11 grid by a greedy assignment that keeps each community as close as possible to its true centroid (a <i>small-multiples grid map</i>, Meulemans et al. 2017).</li>
-        <li><b>Line inside the square</b>: median AED/m² by year, 2015–2026, on one shared scale (0–40k) for all squares. The dot marks the year on the slider.</li>
-        <li><b>Square colour (diverging VSUP)</b>: orange = below the Dubai-wide value, blue = above, darker = further away. As the 90% bootstrap interval widens, the colour gets fewer steps and moves towards neutral grey, so unreliable squares read as "can't tell".</li>
-        <li><b>Connected scatterplot</b>: x = sales per year (log scale, 10% sample), y = median AED/m², one dot per year joined in time order; colour = community identity (max 3), grey = all of Dubai.</li>
-        <li><b>Price line</b> (below): the same communities as a plain line chart of median AED/m² by year, for readers new to connected scatterplots.</li></ul></div>
+        <li>Grid map: one square per community with at least 100 clean residential sales. Squares are placed in a 13x11 grid by a greedy assignment that keeps each community as close as possible to its true centroid (a small-multiples grid map, Meulemans et al. 2017).</li>
+        <li>Line inside the square: median AED/m² by year, 2015-2026, on one shared scale (0-40k) for all squares. The dot marks the year on the slider.</li>
+        <li>Square colour (diverging VSUP): orange = below the Dubai-wide value, blue = above, darker = further away. As the 90% bootstrap interval widens, the colour gets fewer steps and moves towards neutral grey, so unreliable squares read as "can't tell".</li>
+        <li>Connected scatterplot: x = sales per year (log scale, 10% sample), y = median AED/m², one dot per year joined in time order; colour = community identity (max 3), grey = all of Dubai.</li>
+        <li>Price line (below): the same communities as a plain line chart of median AED/m² by year, for readers new to connected scatterplots.</li></ul></div>
       <div><h3>Interaction</h3><ul>
         <li>Hover a square: name, DLD name, value with its 90% interval and sample size.</li>
         <li>Click a square: add or remove it in the connected scatterplot (up to 3; the oldest drops out).</li>
         <li>Year slider / Play: draws the paths up to that year and moves the year marker in every square, so both views stay in sync.</li>
         <li>Switch the colour metric, or turn VSUP off to see how much the plain palette over-states small samples.</li></ul></div>
       <div><h3>Data & cleaning</h3><ul>
-        <li>Clean residential sales (see prep script). A yearly median needs ≥ 5 sales, otherwise the year is left out.</li>
-        <li>Growth = median AED/m² 2024–26 ÷ median 2018–20 − 1. Its interval comes from 1,000 bootstrap resamples of both periods.</li>
-        <li>Growth mixes real price change with a change in <i>what</i> is sold (for example, more luxury off-plan launches). Read it as "how much more the typical m² sold for", not as a like-for-like index.</li>
-        <li>2026 volume is annualised (×1.404); prices are not.</li>
-        <li><b>Outside data, real prices:</b> "Real (2015 AED)" divides every sale's price per m² by the UAE consumer price index of its year (<a href="https://data.worldbank.org/indicator/FP.CPI.TOTL.ZG?locations=AE" target="_blank" rel="noopener">World Bank, FP.CPI.TOTL.ZG</a>, 2015 = 100; 2025 = 113.2). There is no 2026 figure yet, so 2026 uses the 2025 level. Medians, growth and bootstrap intervals are then recomputed on the deflated prices.</li>
-        <li>Names: DLD community names (e.g. <i>Al Barsha South Fourth</i>) are shown with their market name (<i>JVC</i>) from the dominant <span class="num">master_project_en</span>.</li></ul></div>
+        <li>Clean residential sales (see prep script). A yearly median needs at least 5 sales, otherwise the year is left out.</li>
+        <li>Growth = median AED/m² 2024-26 / median 2018-20 - 1. Its interval comes from 1,000 bootstrap resamples of both periods.</li>
+        <li>Growth mixes real price change with a change in what is sold (for example, more luxury off-plan launches). So it shows how much more the typical m² sold for, which is not the same as a like-for-like price index.</li>
+        <li>2026 volume is annualised (x1.404); prices are not.</li>
+        <li>Outside data, real prices: "Real (2015 AED)" divides every sale's price per m² by the UAE consumer price index of its year (<a href="https://data.worldbank.org/indicator/FP.CPI.TOTL.ZG?locations=AE" target="_blank" rel="noopener">World Bank, FP.CPI.TOTL.ZG</a>, 2015 = 100; 2025 = 113.2). There is no 2026 figure yet, so 2026 uses the 2025 level. Medians, growth and bootstrap intervals are then recomputed on the deflated prices.</li>
+        <li>Names: DLD community names (e.g. Al Barsha South Fourth) are shown with their market name (JVC) from the dominant <span class="num">master_project_en</span>.</li></ul></div>
     </div>
   </details>
 </div>

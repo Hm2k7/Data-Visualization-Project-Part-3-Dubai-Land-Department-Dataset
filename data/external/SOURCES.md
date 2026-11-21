@@ -3,13 +3,13 @@
 All three files are small, hand-checked extracts from official publications. They live next to the course
 data so `prep/prepare_data.py` can read them. Retrieved 20 November 2026.
 
-## 1. `worldbank_uae_inflation.csv`: UAE consumer-price inflation, 2014–2025
+## 1. `worldbank_uae_inflation.csv`: UAE consumer-price inflation, 2014-2025
 
 - **Source:** World Bank, World Development Indicators, indicator `FP.CPI.TOTL.ZG` ("Inflation, consumer prices
   (annual %)"), United Arab Emirates.
   - Open it in a browser (chart, table, CSV/Excel download): https://data.worldbank.org/indicator/FP.CPI.TOTL.ZG?locations=AE
   - The same numbers as raw data (what the prep script used): https://api.worldbank.org/v2/country/ARE/indicator/FP.CPI.TOTL.ZG?format=json&date=2014:2025
-    (last updated 2026-07-13). The 2008–2023 values match the mirror at https://github.com/datasets/cpi.
+    (last updated 2026-07-13). The 2008-2023 values match the mirror at https://github.com/datasets/cpi.
 - **How it is linked:** by **year**. The prep script chains the yearly rates into a price index (2015 = 100, so
   2025 = 113.2) and divides every sale's AED/m² by the index of its year, giving prices in 2015 dirhams.
   There is no 2026 figure yet, so 2026 uses the 2025 level.
@@ -18,7 +18,7 @@ data so `prep/prepare_data.py` can read them. Retrieved 20 November 2026.
 - **Caveat:** this is the national UAE index, not a Dubai-only one. The Dubai index (Dubai Data and Statistics
   Establishment) uses 2021 = 100 and is only easily available from 2022 onwards.
 
-## 2. `rta_metro_station_ridership.csv`: annual riders per metro station, 2019 and 2022–2025
+## 2. `rta_metro_station_ridership.csv`: annual riders per metro station, 2019 and 2022-2025
 
 - **Source:** the Roads and Transport Authority's annual ridership press releases, published on rta.ae and by
   the Dubai Media Office (one URL per row in the `source` column):
@@ -31,7 +31,7 @@ data so `prep/prepare_data.py` can read them. Retrieved 20 November 2026.
   including renames: "Sharaf DG" on the Green Line is the former Al Fahidi (G25), renamed 24 November 2020;
   "Dubai Multi-Commodities Centre" is DMCC (R37). All 47 rows matched one of 14 stations.
 - **Used in:** Vis 1 ("RTA riders" switch below the line, tooltips, station panel, story note).
-- **Caveat:** RTA only publishes its busiest stations, so 42 of the 56 stations have no figure (shown as "–").
+- **Caveat:** RTA only publishes its busiest stations, so 42 of the 56 stations have no figure (shown as "-").
   The full trip-level data is on Dubai Pulse (`rta_metro_ridership-open`), but it needs an access request.
 
 ## 3. `dubai_freehold_areas_2006.csv`: the original freehold areas
@@ -44,10 +44,10 @@ data so `prep/prepare_data.py` can read them. Retrieved 20 November 2026.
   The regulation itself is a numbered list of 23 areas with their land-plot numbers, so the plot
   numbers you see in it are expected.
 - **How it is linked:** by **community name** to `CNAME_E` / `COMM_NUM` in `dubai.geojson`. 16 of the 23 areas
-  match (e.g. "Dubai Marina" = MARSA DUBAI, "Palm Jumairah" = NAKHLAT JUMEIRA). 7 do not: Emirates Hills 1–3,
+  match (e.g. "Dubai Marina" = MARSA DUBAI, "Palm Jumairah" = NAKHLAT JUMEIRA). 7 do not: Emirates Hills 1-3,
   Jebel Ali, Al Rowyah, Sheikh Zayed Road and Nad al-Sheba. Either the name is not a community in the file, or the
   plots could fall in several communities. The `match_note` column gives the reason for each.
 - **Used in:** Vis 1 (dashed outline on the station map; it explains why the busiest old-core stations have no
   freehold sales).
-- **Caveat:** later resolutions (2010–2022) added more areas, so this is the *original* list only, not today's
+- **Caveat:** later resolutions (2010-2022) added more areas, so this is the *original* list only, not today's
   full freehold map.

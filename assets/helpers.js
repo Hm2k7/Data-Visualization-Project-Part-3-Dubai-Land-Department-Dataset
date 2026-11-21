@@ -19,6 +19,12 @@ function aed(value) {
   return "AED " + d3.format(",.0f")(value / 1e3) + "k";
 }
 
+// A lighter, solid version of a colour (amount 0 = white, 1 = the colour).
+// Used instead of transparency so overlapping marks don't mix.
+function tint(colour, amount) {
+  return d3.interpolateRgb("#fff", colour)(amount);
+}
+
 // ---------------------------------------------------------------------
 // Tooltip (one <div id="tt"> per page)
 // ---------------------------------------------------------------------

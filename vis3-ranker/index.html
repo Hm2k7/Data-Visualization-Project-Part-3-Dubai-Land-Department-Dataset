@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Where Should I Buy? · multi-criteria community ranker</title>
+<title>Where Should I Buy? - multi-criteria community ranker</title>
 <link rel="stylesheet" href="../assets/common.css">
 <style>
   .layout { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 14px; align-items: start; }
@@ -12,7 +12,7 @@
   @media (max-width: 1100px) { .weights { grid-template-columns: repeat(2, 1fr); } }
   .w { font-size: 12px; }
   .w .top { display: flex; justify-content: space-between; align-items: center; }
-  .w .top b { font-weight: 600; color: var(--text-primary); }
+  .w .top .wname { color: var(--text-primary); }
   .w .top .num { color: var(--text-secondary); }
   .w input { width: 100%; }
   .w .hint { color: var(--text-muted); font-size: 11px; }
@@ -23,26 +23,26 @@
   .row .hl { fill: transparent; }
   .row:hover .hl, .row.hover .hl { fill: #efede8; }
   .row.sel .hl { fill: #e3eefc; }
-  .row.excluded { opacity: .45; }
+  .row.excluded text { fill: #b9b6ad; }
   .colhead { cursor: pointer; }
   .colhead text { font-size: 11px; }
-  .colhead.on text { font-weight: 700; fill: var(--text-primary); }
+  .colhead.on text { font-weight: 600; fill: var(--text-primary); }
   .budget { display: flex; align-items: center; gap: 8px; }
   .budget input { width: 200px; }
-  .budget .num { font-weight: 500; min-width: 86px; display: inline-block; }
-  .big { font-size: 18px; font-family: var(--mono); font-weight: 500; }
+  .budget .num { min-width: 86px; display: inline-block; }
+  .big { font-size: 18px; color: var(--text-primary); }
   .answer { font-size: 19px; color: var(--text-primary); margin-bottom: 4px; }
-  .answer b { background: #fff6d6; padding: 0 4px; border-radius: 4px; }
+  .answer b { font-weight: 600; }
   .why { font-size: 11.5px; fill: var(--text-secondary); }
   .toggle-all { font: inherit; font-size: 12px; border: 0; background: none; color: var(--accent); cursor: pointer; padding: 6px 0; }
 </style>
 </head>
 <body>
 <div class="page">
-  <div class="crumbs"><a href="../index.html">CS333 Part 3 · Group 3</a> / Visualization 3</div>
-  <h1>Where should I buy? Rank Dubai's communities by what matters to <i>you</i></h1>
+  <div class="crumbs"><a href="../index.html">CS333 Part 3, Group 3</a> / Visualization 3</div>
+  <h1>Where should I buy? Rank Dubai's communities by what matters to you</h1>
   <p class="lede answer" id="answer"></p>
-  <p class="lede" style="font-size:14px">Pick a home type and budget, or a ready-made persona. Each row's bar shows its score, built from coloured pieces, one per criterion, so you can see <i>why</i> it ranks there. Click a row to check every recent sale against your budget.</p>
+  <p class="lede" style="font-size:14px">Pick a home type and budget, or a ready-made persona. Each row's bar shows its score, built from coloured pieces, one per criterion, so you can see why it ranks there. Click a row to check every recent sale against your budget.</p>
 
   <div class="controls">
     <div><label class="title">Home type</label><span class="seg" data-key="seg" id="segbtns"></span></div>
@@ -78,26 +78,26 @@
     <summary>Encoding, interaction & data notes</summary>
     <div class="cols">
       <div><h3>Encoding</h3><ul>
-        <li><b>Row order</b>: rank by weighted score (or by one criterion if you click its column header).</li>
-        <li><b>Stacked bar</b>: total length = score (0–100); each coloured segment = weight × criterion score, so its length shows that criterion's contribution. Colour = criterion (8 fixed colours, same order everywhere).</li>
-        <li><b>Criterion columns</b>: bar length = the community's percentile among the ranked communities (budget fit = raw share within budget). Hatched = unknown, counted as average.</li>
-        <li><b>Strongest reasons</b>: the two criteria contributing most to the score (only if the community is in the top 40% on them), written in plain words.</li>
-        <li><b>Headline sentence</b>: rewritten live from the current top 3 and budget.</li>
-        <li><b>▲▼</b> beside the rank: how many places the row moved after your last change.</li>
-        <li><b>Map</b>: numbered circles at community centroids (position), metro lines in their line colours.</li>
-        <li><b>Budget check</b>: a unit dot plot. Each dot = 1 (or k) recent sales, x = price (log scale), colour = ready vs off-plan, vertical rule = your budget.</li></ul></div>
+        <li>Row order: rank by weighted score (or by one criterion if you click its column header).</li>
+        <li>Stacked bar: total length = score (0-100); each coloured segment = weight x criterion score, so its length shows that criterion's contribution. Colour = criterion (8 fixed colours, same order everywhere).</li>
+        <li>Criterion columns: bar length = the community's percentile among the ranked communities (budget fit = raw share within budget). Hatched = unknown, counted as average.</li>
+        <li>Strongest reasons: the two criteria contributing most to the score (only if the community is in the top 40% on them), written in plain words.</li>
+        <li>Headline sentence: rewritten live from the current top 3 and budget.</li>
+        <li>▲▼ beside the rank: how many places the row moved after your last change.</li>
+        <li>Map: numbered circles at community centroids (position), metro lines in their line colours.</li>
+        <li>Budget check: a unit dot plot. Each dot = 1 (or k) recent sales, x = price (log scale), colour = ready vs off-plan, vertical rule = your budget.</li></ul></div>
       <div><h3>Interaction</h3><ul>
-        <li>Home type, budget and Ready/Off-plan recompute the live criteria from the 2024–26 sales.</li>
+        <li>Home type, budget and Ready/Off-plan recompute the live criteria from the 2024-26 sales.</li>
         <li>Weight sliders and persona presets re-weight the scores; rows animate to their new rank.</li>
         <li>Click a column header to rank by that criterion only; click "Score" to go back.</li>
-        <li>Hover a row ↔ highlights its marker on the map (and the other way round).</li>
+        <li>Hovering a row highlights its marker on the map, and hovering a marker highlights its row.</li>
         <li>Click a row to open its budget check.</li></ul></div>
       <div><h3>Data</h3><ul>
-        <li><b>Budget fit, Value (median AED/m²), Liquidity (number of sales), Ready share</b>: clean residential sales 2024 to Sep 2026 of the chosen home type. Communities with fewer than 10 such sales (10% sample) are listed but not ranked.</li>
-        <li><b>Momentum</b>: <i>real</i> growth of median AED/m², 2018–20 → 2024–26 (all homes): each sale is first divided by the UAE consumer price index of its year (<a href="https://data.worldbank.org/indicator/FP.CPI.TOTL.ZG?locations=AE" target="_blank" rel="noopener">World Bank</a>, outside data), so momentum is growth beyond inflation.</li>
-        <li><b>Metro access</b>: straight-line km from the community centroid (<span class="num">dubai.geojson</span>) to the nearest of the 56 stations in <span class="num">dubai_metro_stations.geojson</span>.</li>
-        <li><b>Amenities</b>: Foursquare venues in <span class="num">dubai_venues.csv</span>. The file caps a community at 100 venues, so "100+" communities are tied at the top.</li>
-        <li><b>Established</b>: residents per km² in 2019 (<span class="num">dubai.geojson</span> population).</li></ul></div>
+        <li>Budget fit, Value (median AED/m²), Liquidity (number of sales), Ready share: clean residential sales 2024 to Sep 2026 of the chosen home type. Communities with fewer than 10 such sales (10% sample) are listed but not ranked.</li>
+        <li>Momentum: real growth of median AED/m², 2018-20 --> 2024-26 (all homes): each sale is first divided by the UAE consumer price index of its year (<a href="https://data.worldbank.org/indicator/FP.CPI.TOTL.ZG?locations=AE" target="_blank" rel="noopener">World Bank</a>, outside data), so momentum is growth beyond inflation.</li>
+        <li>Metro access: straight-line km from the community centroid (<span class="num">dubai.geojson</span>) to the nearest of the 56 stations in <span class="num">dubai_metro_stations.geojson</span>.</li>
+        <li>Amenities: Foursquare venues in <span class="num">dubai_venues.csv</span>. The file caps a community at 100 venues, so "100+" communities are tied at the top.</li>
+        <li>Established: residents per km² in 2019 (<span class="num">dubai.geojson</span> population).</li></ul></div>
     </div>
   </details>
 </div>

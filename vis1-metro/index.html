@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Along the Line · Dubai metro & tram price profiles</title>
+<title>Along the Line - Dubai metro & tram price profiles</title>
 <link rel="stylesheet" href="../assets/common.css">
 <style>
   .layout { display: grid; grid-template-columns: minmax(0, 1fr) 372px; gap: 14px; align-items: start; }
@@ -14,47 +14,48 @@
   .row .bg { fill: transparent; }
   .row:hover .bg { fill: #efede8; }
   .row.sel .bg { fill: #e3eefc; }
-  .row.dim { opacity: .22; }
+  .row.dim text.name, .row.dim text.val, .row.dim text.none { fill: #c9c6bd; }
+  .row.dim .bar, .row.dim .med { fill: #e4e2dc; stroke: #d6d3cb; }
+  .row.dim .iqr { stroke: #eceae5; }
   .row text.name { font-size: 12px; fill: var(--text-primary); }
   .row.empty text.name { fill: var(--text-muted); }
-  .row.sel text.name { font-weight: 600; }
-  .row text.val { font-size: 10.5px; font-family: var(--mono); fill: var(--text-secondary); }
-  .row text.none { font-size: 10.5px; fill: var(--text-muted); font-style: italic; }
+  .row text.val { font-size: 10.5px; fill: var(--text-secondary); }
+  .row text.none { font-size: 10.5px; fill: var(--text-muted); }
   .line-title { font-size: 15px; font-weight: 600; fill: var(--text-primary); }
   .axis-cap { font-size: 10.5px; fill: var(--text-muted); }
   .brush .selection { fill: var(--text-primary); fill-opacity: .07; stroke: var(--text-primary); }
   .findings { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
   @media (max-width: 1100px) { .findings { grid-template-columns: repeat(2, 1fr); } }
-  .finding { background: var(--surface-1); border: 1px solid var(--rule); border-radius: 12px; padding: 12px 14px; cursor: pointer; text-align: left; font: inherit; color: inherit; }
+  .finding { background: var(--surface-1); border: 1px solid var(--rule); border-radius: 4px; padding: 12px 14px; cursor: pointer; text-align: left; font: inherit; color: inherit; }
   .finding:hover { border-color: var(--text-secondary); }
-  .finding .big { font-family: var(--mono); font-size: 24px; font-weight: 500; line-height: 1.1; }
+  .finding .big { font-size: 22px; line-height: 1.15; color: var(--text-primary); }
   .finding .txt { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
   .finding .go { font-size: 11.5px; color: var(--accent); margin-top: 6px; }
   .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 0 10px; }
-  .kpi { background: var(--surface-0); border-radius: 8px; padding: 7px 9px; }
-  .kpi .v { font-family: var(--mono); font-size: 16px; font-weight: 500; }
+  .kpi { background: var(--surface-0); border-radius: 3px; padding: 7px 9px; }
+  .kpi .v { font-size: 16px; }
   .kpi .l { font-size: 11px; color: var(--text-muted); }
   .kpi.wide { grid-column: span 3; display: flex; align-items: baseline; gap: 10px; }
   .panel-sec { margin-top: 12px; }
-  .panel-sec h3 { font-size: 12px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin: 0 0 6px; font-weight: 500; }
+  .panel-sec h3 { font-size: 13px; color: var(--text-primary); margin: 0 0 6px; font-weight: 600; }
   .commlist { font-size: 12px; margin: 0; padding: 0; list-style: none; }
   .commlist li { display: flex; justify-content: space-between; border-bottom: 1px solid var(--rule); padding: 3px 0; }
-  .commlist li span:last-child { font-family: var(--mono); color: var(--text-secondary); }
+  .commlist li span:last-child { color: var(--text-secondary); }
   .bandnote { font-size: 12px; color: var(--text-secondary); }
   .howto { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; font-size: 12.5px; color: var(--text-secondary); margin: 2px 0 12px; }
 </style>
 </head>
 <body>
 <div class="page">
-  <div class="crumbs"><a href="../index.html">CS333 Part 3 · Group 3</a> / Visualization 1</div>
-  <h1>Dubai's metro runs past the old city, not the new homes</h1>
-  <p class="lede">Each row is a station, in the order the train stops. The <b>dot</b> shows the typical price per m² of homes sold near that station; the <b>bar</b> shows how many were sold (or, switched, how many people ride from it). Click a station to see its full profile.</p>
+  <div class="crumbs"><a href="../index.html">CS333 Part 3, Group 3</a> / Visualization 1</div>
+  <h1>Most of Dubai's new homes are far from the metro</h1>
+  <p class="lede">Each row is a station, in the order the train stops. The dot shows the typical price per m² of homes sold near that station; the bar shows how many were sold (or, switched, how many people ride from it). Click a station to see its full profile.</p>
 
   <div class="findings" id="findings"></div>
 
   <div class="controls">
     <div><label class="title">Period</label>
-      <span class="seg" data-key="period"><button data-v="early">2015–2020</button><button data-v="recent" class="on">2021–2026</button><button data-v="all">All</button></span></div>
+      <span class="seg" data-key="period"><button data-v="early">2015-2020</button><button data-v="recent" class="on">2021-2026</button><button data-v="all">All</button></span></div>
     <div><label class="title">Homes</label>
       <span class="seg" data-key="reg"><button data-v="all" class="on">All sales</button><button data-v="offplan">Off-plan</button><button data-v="ready">Ready</button></span></div>
     <div><label class="title">Bar shows</label>
@@ -87,11 +88,11 @@
     <summary>Encoding, interaction & data notes</summary>
     <div class="cols">
       <div><h3>Encoding</h3><ul>
-        <li><b>Vertical position</b>: station order along each line, like a line diagram on a platform wall (schematic, not geographic). Names are horizontal so they can be read.</li>
-        <li><b>Horizontal position of the dot</b>: median price per m² of residential sales whose DLD "nearest station" is this stop, on one shared scale. The thick line behind it covers the middle half of sales (25th–75th percentile). The dashed line is Dubai's median.</li>
-        <li><b>Hollow dot</b>: the typical sale is more than 2 km from the station, so it is not walkable.</li>
-        <li><b>Bar length</b>: homes sold (10% sample), or annual metro riders from RTA, or Foursquare places nearby.</li>
-        <li><b>Line colour</b>: Red Line, Green Line, Dubai Tram.</li></ul></div>
+        <li>Vertical position: station order along each line, like a line diagram on a platform wall (schematic, not geographic). Names are horizontal so they can be read.</li>
+        <li>Horizontal position of the dot: median price per m² of residential sales whose DLD "nearest station" is this stop, on one shared scale. The thick line behind it covers the middle half of sales (25th-75th percentile). The dashed line is Dubai's median.</li>
+        <li>Hollow dot: the typical sale is more than 2 km from the station, so it is not walkable.</li>
+        <li>Bar length: homes sold (10% sample), or annual metro riders from RTA, or Foursquare places nearby.</li>
+        <li>Line colour: Red Line, Green Line, Dubai Tram.</li></ul></div>
       <div><h3>Interaction</h3><ul>
         <li>The four finding cards jump to the station that proves each point.</li>
         <li>Hover a row for its numbers; click it to fill the profile panel (histogram vs Dubai, unit-type waffle, map of where its buyers' homes are, places nearby).</li>
@@ -101,7 +102,7 @@
         <li>Clean residential sales (units and villas) from <span class="num">transactions.csv</span>, 2015 to 17 Sep 2026.</li>
         <li>All 56 labels of <span class="num">nearest_metro_en</span> (metro stations, tram stops, renamed stations, a typo) were mapped to station codes.</li>
         <li>Distance runs from the DLD area centroid to the station, so it is approximate.</li>
-        <li><b>Outside data:</b> RTA annual riders for the 14 stations RTA publishes (2019, 2022–2025; <a href="https://mediaoffice.ae/en/news/2026/february/15-02/rta-records-802-riders-in-dubai-2025" target="_blank" rel="noopener">Dubai Media Office</a>), and the original freehold areas of <a href="https://dlp.dubai.gov.ae/Legislation%20Reference/2006/Regulation%20No.%20(3)%20of%202006%20Concerning%20determining%20the%20areas%20of%20ownership%20of%20real%20estate.pdf" target="_blank" rel="noopener">Dubai Regulation No. 3 of 2006</a>. All links: <span class="num">data/external/SOURCES.md</span>.</li></ul></div>
+        <li>Outside data: RTA annual riders for the 14 stations RTA publishes (2019, 2022-2025; <a href="https://mediaoffice.ae/en/news/2026/february/15-02/rta-records-802-riders-in-dubai-2025" target="_blank" rel="noopener">Dubai Media Office</a>), and the original freehold areas of <a href="https://dlp.dubai.gov.ae/Legislation%20Reference/2006/Regulation%20No.%20(3)%20of%202006%20Concerning%20determining%20the%20areas%20of%20ownership%20of%20real%20estate.pdf" target="_blank" rel="noopener">Dubai Regulation No. 3 of 2006</a>. All links: <span class="num">data/external/SOURCES.md</span>.</li></ul></div>
     </div>
   </details>
 </div>

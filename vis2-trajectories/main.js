@@ -1,5 +1,5 @@
 /* =====================================================================
-   Vis 2 · Grid map + connected scatterplot       owner: Khalid Albadda
+   Vis 2 - Grid map + connected scatterplot       owner: Khalid Albadda
    ---------------------------------------------------------------------
    Question: did every community ride the same boom, or did they take
    different paths?
@@ -24,13 +24,13 @@
 const SLOT_HEX = ["#2a78d6", "#eb6834", "#1baf7a"]; // colours for the 3 picked communities
 const DUBAI_GREY = "#8a8880";
 
-// Grid map: 13 × 11 squares of 60 px
+// Grid map: 13 x 11 squares of 60 px
 const COLS = 13, ROWS = 11, TS = 60, PAD = 2;
 
 // Plain-language names for the squares (max ~2 short lines). Key = DLD area code.
 const TILE = {681:"JVC",346:"Business Bay",392:"Dubai Marina",648:"DLRC",521:"Dubai South",347:"Sobha Hartland",631:"Dubai Hills",345:"Downtown",591:"Al Furjan",415:"Creek Harbour",393:"JLT",682:"Sports City",673:"Arjan",621:"Intl City 1",645:"Majan",922:"Town Square",684:"JVT",685:"Production City",626:"Silicon Oasis",321:"Maritime City",381:"Palm Jumeirah",674:"Motor City",676:"DAMAC Hills",672:"Science Park",343:"City Walk",326:"Al Jadaf",611:"Bu Kadra",665:"Wadi Al Safa 7",643:"Liwan",597:"DIP 2",915:"The Valley",683:"Remraam",101:"Dubai Islands",646:"City of Arabia",921:"Al Yalayis",388:"The Greens",618:"Meydan",598:"DIP 1",675:"Studio City",337:"Za'abeel 2",916:"DAMAC Hills 2",624:"Intl City 3",394:"Emirates Living",518:"Jebel Ali Dtn",612:"Ras Al Khor",366:"Umm Suqeim",664:"Arabian Ranches",324:"Al Kifaf",677:"Mudon",332:"La Mer",359:"Al Quoz",334:"Jumeirah Garden",325:"Za'abeel 1",531:"Saih Shuaib",251:"Mirdif",382:"Al Sufouh",383:"Barsha Heights",261:"Muhaisnah",918:"DAMAC Hills 2b",336:"Trade Centre"};
 
-// Split a square's name into at most 2 lines of ≤ 9 characters
+// Split a square's name into at most 2 lines of 9 characters or less
 function tileLines(d) {
   const name = TILE[d.c] || d.known;
   const words = name.split(" ");
@@ -41,7 +41,7 @@ function tileLines(d) {
 }
 
 // =====================================================================
-// STEP 1 · Load the data
+// STEP 1, Load the data
 // vis2_trajectories.json is made by prep/prepare_data.py: per community,
 // a yearly median price (nominal and inflation-adjusted with the World
 // Bank UAE CPI), sales count, and three metrics with 90% bootstrap
@@ -51,14 +51,14 @@ d3.json("../data/vis2_trajectories.json").then((data) => start(data));
 
 function start(data) {
   // =====================================================================
-  // STEP 2 · State and scales
+  // STEP 2, State and scales
   // =====================================================================
 
   // metric:   what colours the squares: "level" | "growth" | "offplan"
   // vsup:     "on" = fade uncertain squares, "off" = plain 8 colour steps
   // story:    "on" = show the caption under the scatterplot
   // real:     "nominal" AED or "real" (2015 AED, after inflation)
-  // year:     the year shown by the slider (2015–2026)
+  // year:     the year shown by the slider (2015-2026)
   // selected: up to 3 community codes drawn in the scatterplot
   const state = { metric: "level", vsup: "on", story: "on", real: "nominal", year: 2026, selected: [681, 345, 648] };
 
@@ -92,19 +92,19 @@ function start(data) {
   // thr = interval half-widths that move a square to the next, greyer level.
   const METRICS = {
     level: {
-      label: "Typical price per m², 2024–26",
+      label: "Typical price per m², 2024-26",
       fmt: (v) => fmt(v),
-      ufmt: (m) => `${fmt(m.lo)}–${fmt(m.hi)}`,
-      // log ratio: 2.5× Dubai's price = darkest blue, 1/2.5 = darkest orange
+      ufmt: (m) => `${fmt(m.lo)}-${fmt(m.hi)}`,
+      // log ratio: 2.5x Dubai's price = darkest blue, 1/2.5 = darkest orange
       toT: (v) => 0.5 + Math.log(v / REF.level) / Math.log(2.5) / 2,
       fromT: (t) => REF.level * 2.5 ** ((t - 0.5) * 2),
       low: "cheaper than Dubai",
       high: "pricier than Dubai",
       thr: [0.02, 0.04, 0.07],
-      uTicks: ["±<2%", "±2–4%", "±4–7%", "±>7%"],
+      uTicks: ["±<2%", "±2-4%", "±4-7%", "±>7%"],
     },
     growth: {
-      label: "Price growth, 2018–20 → 2024–26",
+      label: "Price growth, 2018-20 --> 2024-26",
       fmt: (v) => pctSigned(v),
       ufmt: (m) => `${pctSigned(m.lo)} to ${pctSigned(m.hi)}`,
       toT: (v) => 0.5 + (v - REF.growth) / 2, // ±100 points from Dubai = darkest
@@ -112,18 +112,18 @@ function start(data) {
       low: "grew slower than Dubai",
       high: "grew faster than Dubai",
       thr: [0.1, 0.2, 0.35],
-      uTicks: ["±<10 pts", "±10–20", "±20–35", "±>35"],
+      uTicks: ["±<10 pts", "±10-20", "±20-35", "±>35"],
     },
     offplan: {
-      label: "Off-plan share of sales, 2024–26",
+      label: "Off-plan share of sales, 2024-26",
       fmt: (v) => pct(v),
-      ufmt: (m) => `${pct(m.lo)}–${pct(m.hi)}`,
+      ufmt: (m) => `${pct(m.lo)}-${pct(m.hi)}`,
       toT: (v) => 0.5 + (v - REF.offplan) / 1.2, // ±60 points from Dubai = darkest
       fromT: (t) => REF.offplan + (t - 0.5) * 1.2,
       low: "fewer off-plan than Dubai",
       high: "more off-plan than Dubai",
       thr: [0.03, 0.05, 0.08],
-      uTicks: ["±<3 pts", "±3–5", "±5–8", "±>8"],
+      uTicks: ["±<3 pts", "±3-5", "±5-8", "±>8"],
     },
   };
 
@@ -145,7 +145,7 @@ function start(data) {
     return 3;
   }
 
-  // VSUP: the less certain, the fewer colour steps (8 → 4 → 2 → 1)
+  // VSUP: the less certain, the fewer colour steps (8 --> 4 --> 2 --> 1)
   // and the more the colour is pulled towards grey.
   function vsupColor(metric, value, u, on = true) {
     const t = Math.max(0, Math.min(0.9999, METRICS[metric].toT(value)));
@@ -200,16 +200,16 @@ function start(data) {
   setRef();
 
   // =====================================================================
-  // STEP 3 · Draw
+  // STEP 3, Draw
   // =====================================================================
 
   // --- grid map ------------------------------------------------------------
   const GW = COLS * TS, GH = ROWS * TS;
   const grid = d3.select("#grid").attr("width", GW).attr("height", GH);
   grid.append("text").attr("x", 6).attr("y", 16).attr("font-size", 11).attr("fill", "var(--text-muted)")
-    .text("↖ Arabian Gulf");
+    .text("Arabian Gulf (north-west)");
   grid.append("text").attr("x", GW - 6).attr("y", GH - 6).attr("text-anchor", "end").attr("font-size", 11)
-    .attr("fill", "var(--text-muted)").text("desert / Dubailand ↘");
+    .attr("fill", "var(--text-muted)").text("desert / Dubailand (south-east)");
 
   // ---- THE DATA JOIN: one <g class="tile"> per community -------------------
   // Key = community code, so a square keeps its identity on every update.
@@ -249,12 +249,12 @@ function start(data) {
   cs.append("g").attr("class", "phase");
   const pathsG = cs.append("g");
   cs.append("text").attr("x", CW - m.r).attr("y", CH - 8).attr("text-anchor", "end").attr("font-size", 11)
-    .text("sales per year in the 10% sample (log scale) →");
-  const yLabel = cs.append("text").attr("transform", `translate(14,${m.t}) rotate(90)`).attr("font-size", 11)
-    .text("median AED per m² →");
-  cs.append("text").attr("class", "readhint").attr("x", m.l + 8).attr("y", m.t + 12).text("↑ pricier");
+    .text("sales per year in the 10% sample (log scale) -->");
+  const yLabel = cs.append("text").attr("transform", `translate(16,${CH - m.b}) rotate(-90)`).attr("font-size", 11)
+    .text("median AED per m² -->");
+  cs.append("text").attr("class", "readhint").attr("x", m.l + 8).attr("y", m.t + 12).text("pricier");
   cs.append("text").attr("class", "readhint").attr("x", CW - m.r - 4).attr("y", CH - m.b - 8)
-    .attr("text-anchor", "end").text("more homes sold →");
+    .attr("text-anchor", "end").text("more homes sold -->");
 
   // --- price line chart frame ---------------------------------------------
   const lc = d3.select("#lc").attr("width", LW).attr("height", LH).attr("viewBox", [0, 0, LW, LH]);
@@ -262,12 +262,12 @@ function start(data) {
   const lyAxisG = lc.append("g").attr("class", "axis").attr("transform", `translate(${lm.l},0)`);
   const lgrid = lc.append("g").attr("class", "gridline");
   const lpaths = lc.append("g");
-  const yearRule = lc.append("line").attr("stroke", "var(--text-primary)").attr("stroke-opacity", 0.35);
+  const yearRule = lc.append("line").attr("stroke", "#b9b6ad");
 
   d3.select("#g-title").text(`Grid map of ${comms.length} communities`);
 
   // =====================================================================
-  // STEP 4 · Interactions
+  // STEP 4, Interactions
   // Every handler changes `state`, then calls redraw().
   // =====================================================================
 
@@ -299,7 +299,7 @@ function start(data) {
     redraw();
   });
 
-  // Play: step through 2015 → 2026, one year every 0.7 s
+  // Play: step through 2015 --> 2026, one year every 0.7 s
   let timer = null;
   d3.select("#play").on("click", function () {
     if (timer) {
@@ -335,10 +335,10 @@ function start(data) {
   function tileTip(d) {
     const metric = metricOf(d);
     const M = METRICS[state.metric];
-    let h = `<div class="t-title">${d.known}</div><div class="t-note" style="margin:0 0 4px">DLD: ${d.name} · ${fmt(d.n)} sales 2015–26</div>`;
+    let h = `<div class="t-title">${d.known}</div><div class="t-note" style="margin:0 0 4px">DLD: ${d.name}, ${fmt(d.n)} sales 2015-26</div>`;
     if (!metric) {
       const why = state.metric === "growth"
-        ? "Fewer than 8 sales in 2018–20 or 2024–26: mostly communities that were not launched yet in 2018–20."
+        ? "Fewer than 8 sales in 2018-20 or 2024-26: mostly communities that were not launched yet in 2018-20."
         : "Not enough recent sales to compute this.";
       return h + `<div class="t-note">${why}</div>`;
     }
@@ -352,12 +352,12 @@ function start(data) {
     h += tipRow(M.label, M.fmt(metric.v));
     h += tipRow("Dubai average", M.fmt(REF[state.metric]));
     h += tipRow("90% interval", M.ufmt(metric));
-    h += tipRow("Sample", metric.n || metric.nb + " → " + metric.nn);
+    h += tipRow("Sample", metric.n || metric.nb + " --> " + metric.nn);
     return h + `<div class="t-note">${reliability}</div>`;
   }
 
   function pointTip(s, p) {
-    return `<div class="t-title">${s.full} · ${p.y}</div>` +
+    return `<div class="t-title">${s.full}, ${p.y}</div>` +
       tipRow(`Sales (sample${p.y === 2026 ? ", annualised" : ""})`, fmt(p.nA)) +
       tipRow(`Median AED/m²${isReal() ? " (2015 AED)" : ""}`, fmt(p.cur)) +
       tipRow("Off-plan share", pct(p.op));
@@ -368,7 +368,7 @@ function start(data) {
   }
 
   // =====================================================================
-  // STEP 5 · Update
+  // STEP 5, Update
   // =====================================================================
   function redraw() {
     drawTiles();
@@ -391,7 +391,7 @@ function start(data) {
       g.select(".val")
         .attr("fill", dark ? "#fff" : "var(--text-secondary)")
         .text(metric ? (state.metric === "level" ? d3.format(".0f")(metric.v / 1000) + "k" : METRICS[state.metric].fmt(metric.v)) : "new");
-      g.select(".spark").attr("d", spark(d.traj)).attr("stroke", dark ? "#fff" : "var(--text-primary)").attr("stroke-opacity", 0.9);
+      g.select(".spark").attr("d", spark(d.traj)).attr("stroke", dark ? "#fff" : "var(--text-primary)");
 
       const thisYear = d.traj.find((t) => t.y === state.year);
       const hasYear = thisYear && thisYear.cur != null;
@@ -407,7 +407,7 @@ function start(data) {
 
     const M = METRICS[state.metric];
     const afterInflation = isReal() && state.metric !== "offplan" ? " after inflation" : "";
-    d3.select("#g-sub").html(`Colour: <b>${M.label}${afterInflation}</b> compared with Dubai (${M.fmt(REF[state.metric])}). The little line in each square is its price per m², 2015 → 2026. "new" = not sold yet in 2018–20.`);
+    d3.select("#g-sub").html(`Colour: ${M.label}${afterInflation} compared with Dubai (${M.fmt(REF[state.metric])}). The little line in each square is its price per m², 2015 --> 2026. "new" = not sold yet in 2018-20.`);
     drawLegend();
   }
 
@@ -457,11 +457,11 @@ function start(data) {
     });
     if (state.vsup === "on") {
       svg.append("text").attr("x", cx).attr("y", cy + 18).attr("font-size", 10).attr("text-anchor", "middle")
-        .attr("fill", "var(--text-muted)").text("↑ outer rings = more reliable");
+        .attr("fill", "var(--text-muted)").text("outer rings are more reliable");
     }
     d3.select("#legend-text").html(state.vsup === "on"
-      ? `<b>How to read the colour.</b> Left half of the arc = below Dubai (orange), right half = above Dubai (blue), centre = about the same. The outer ring is used when a number is reliable. With fewer sales the colour moves inwards: fewer, greyer steps, until it is plain grey, which means "can't tell". So a community with a handful of sales can't look as certain as JVC.`
-      : `<b>Plain colours (uncertainty ignored).</b> Every square gets one of 8 steps however few sales it rests on. Switch back to see which strong colours were really based on a few dozen sales.`);
+      ? `How to read the colour: the left half of the arc is below Dubai (orange), the right half is above Dubai (blue) and the middle is about the same. Reliable numbers use the outer ring. When a community has fewer sales its colour moves inwards to fewer and greyer steps, and plain grey means we can't tell. This stops a community with a handful of sales from looking as certain as JVC.`
+      : `Plain colours, uncertainty ignored. Every square gets one of 8 steps however few sales it rests on. Switch back to see which strong colours were really based on a few dozen sales.`);
   }
 
   // The lines to draw: the picked communities + all of Dubai
@@ -483,7 +483,7 @@ function start(data) {
 
   function drawScatter() {
     const S = series();
-    yLabel.text(isReal() ? "median AED per m², in 2015 dirhams (inflation-adjusted) →" : "median AED per m² →");
+    yLabel.text(isReal() ? "median AED per m², in 2015 dirhams (inflation-adjusted) -->" : "median AED per m² -->");
 
     // Fit the axes to the points on screen
     const allPts = S.flatMap((s) => s.pts.filter((p) => p.cur != null && p.nA > 0));
@@ -502,7 +502,7 @@ function start(data) {
         const g = enter.append("g").attr("class", "ser");
         g.append("path").attr("class", "trail").attr("fill", "none");
         g.append("g").attr("class", "pts");
-        g.append("text").attr("class", "lbl").attr("font-size", 12).attr("font-weight", 600);
+        g.append("text").attr("class", "lbl").attr("font-size", 12);
         g.append("g").attr("class", "yrs");
         return g;
       });
@@ -519,7 +519,6 @@ function start(data) {
         .attr("d", d3.line()(withMid))
         .attr("stroke", s.color)
         .attr("stroke-width", 2)
-        .attr("stroke-opacity", isDubai ? 0.7 : 0.9)
         .attr("marker-mid", `url(#arr${s.slot})`);
 
       // One dot per year; the slider year is bigger, 2026 (partial year) is hollow
@@ -562,7 +561,7 @@ function start(data) {
     // Story caption about the grey Dubai path (kept off the chart itself)
     const at = (yy) => data.dubai.find((p) => p.y === yy);
     d3.select("#phase-caption").html(state.story === "on"
-      ? `<b>All of Dubai (grey):</b> 2015–20 sat still, with flat sales and prices drifting down (${fmt(at(2015).cur)} → ${fmt(at(2020).cur)} AED/m²). 2021–25 shot up and to the right: ${fmt(at(2025).cur)} AED/m² and ${d3.format(".1f")(at(2025).nA / at(2020).nA)}× the sales.`
+      ? `All of Dubai (grey): 2015-20 sat still, with flat sales and prices drifting down (${fmt(at(2015).cur)} --> ${fmt(at(2020).cur)} AED/m²). 2021-25 shot up and to the right: ${fmt(at(2025).cur)} AED/m² and ${d3.format(".1f")(at(2025).nA / at(2020).nA)}x the sales.`
       : "");
 
     drawLine(S);
@@ -593,7 +592,7 @@ function start(data) {
         const g = enter.append("g");
         g.append("path");
         g.append("circle");
-        g.append("text").attr("class", "lbl").attr("font-size", 11.5).attr("font-weight", 600);
+        g.append("text").attr("class", "lbl").attr("font-size", 11.5);
         return g;
       });
 
