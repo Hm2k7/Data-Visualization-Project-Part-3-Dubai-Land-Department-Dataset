@@ -21,7 +21,7 @@
 // ---------------------------------------------------------------------
 // Fixed settings
 // ---------------------------------------------------------------------
-const SLOT_HEX = ["#2a78d6", "#eb6834", "#1baf7a"]; // colours for the 3 picked communities
+const SLOT_HEX = ["#7b3fa0", "#1a9e8f", "#222222"]; // colours for the 3 picked communities (purple, teal, black: neutral, so they never look like the map's orange/blue)
 const DUBAI_GREY = "#8a8880";
 
 // Grid map: 13 x 11 squares of 60 px
@@ -59,8 +59,8 @@ function start(data) {
   // real:     "nominal" AED or "real" (2015 AED, after inflation)
   // year:     the year shown by the slider (2015-2026)
   // selected: up to 3 community codes drawn in the scatterplot
-  const state = { metric: "level", vsup: "on", real: "nominal", year: 2026, selected: [681, 345, 648] };
-
+    const state = { metric: "growth", vsup: "on", real: "nominal", year: 2026, selected: [681, 345, 648] };
+   
   const comms = data.comms;
   const byC = new Map(comms.map((c) => [c.c, c]));
   d3.select("#ann").text(data.annualise2026.toFixed(3));
@@ -615,6 +615,7 @@ function start(data) {
     });
   }
 
-  // First paint
+    // First paint
+  markButtonGroups(state); // make the buttons show the starting state
   redraw();
 }
