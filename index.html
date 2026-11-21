@@ -37,7 +37,7 @@
     <div>
       <div class="kicker">CS333 Introduction to Data Visualization, Project Part 3, Group 3</div>
       <h1 style="font-size:30px">Dubai real estate, three new ways to look at it</h1>
-      <p class="lede" style="margin-bottom:0">We built three interactive D3 visualizations from the Dubai Land Department transactions (the 10% sample). They also use the course files for community boundaries, metro stations, population and Foursquare venues, and three outside datasets from the World Bank, RTA and the Dubai Legislation Portal. Each one is aimed at a different user: a city planner, an investor or developer, and a buyer. We stayed away from the chart types we already used in Parts 1 and 2 (a monthly-count line, weekday bars and choropleths). Vis 2 includes a plain yearly price line, but only as a companion to the connected scatterplot.</p>
+      <p class="lede" style="margin-bottom:0">We created three interactive D3 visualizations based on the Dubai Land Department transactions (the 10% sample). They also use the course files for community boundaries, metro stations, population and Foursquare venues and three outside datasets from the World Bank, RTA and the Dubai Legislation Portal. Each one is targeted at different user: a city planner, an investor or developer and a buyer. We didn't use the chart types we already used in Parts 1 and 2 (a monthly-count line, weekday bars and choropleths). Vis 2 has a simple price line yearly, but it is only there to accompany the connected scatterplot.</p>
     </div>
     <div class="team">Hassan Mousa (24000292), Khalid Albadda (24000542), Osama Mohammed (24001318)<br>Presentation slot: Thursday 26 November, 9:15 AM</div>
   </div>
@@ -47,21 +47,21 @@
       <img src="assets/thumb1.png" alt="Strip map of the Red line, tram and Green line with price glyphs above each station">
       <div class="body"><div class="kicker">Visualization 1, for city planners</div>
         <h2>Along the Line</h2>
-        <p>Every metro and tram station as a vertical line diagram: a dot for the typical price, a bar for homes sold or RTA riders. Clickable findings and a station profile with a catchment map.</p>
+        <p>Every metro and tram station as a vertical line diagram. A dot for the typical price, a bar for homes sold or RTA riders. Clickable results & station profile/catchment map.</p>
         <div class="tags"><span class="tag">line diagram</span><span class="tag">dot + range</span><span class="tag">brushing</span><span class="tag">outside data: RTA</span><span class="tag">linked views x4</span></div>
         <div class="who">Owner: Hassan Mousa</div></div></a>
     <a class="vcard" href="vis2-trajectories/index.html">
       <img src="assets/thumb2.png" alt="Grid map of communities with sparklines and VSUP colours next to a connected scatterplot">
       <div class="body"><div class="kicker">Visualization 2, for investors and developers</div>
         <h2>Boom Paths</h2>
-        <p>A grid map of 54 communities coloured above or below the Dubai average, fading to grey when the sample is too small (VSUP), linked to connected scatterplots and a plain price line.</p>
+        <p>A grid map of 54 communities colored above or below Dubai average, fading to gray when sample is too small (VSUP), linked to connected scatterplots and plain price line.</p>
         <div class="tags"><span class="tag">grid map</span><span class="tag">diverging VSUP</span><span class="tag">connected scatterplot</span><span class="tag">real prices</span></div>
         <div class="who">Owner: Khalid Albadda</div></div></a>
     <a class="vcard" href="vis3-ranker/index.html">
       <img src="assets/thumb3.png" alt="LineUp-style ranking table with stacked score bars, a map of the top 10 and a dot plot of prices">
       <div class="body"><div class="kicker">Visualization 3, for buyers</div>
         <h2>Where Should I Buy?</h2>
-        <p>A LineUp-style ranking with weight sliders and personas that answers in one sentence and says why in plain words, linked to a top-10 map and a dot plot of every recent sale against your budget.</p>
+        <p>A LineUp-style ranking with weight sliders and personas that answers in one sentence and explains why in plain words, linked to a top-10 map and a dot plot of every recent sale against your budget.</p>
         <div class="tags"><span class="tag">LineUp ranking</span><span class="tag">stacked scores</span><span class="tag">unit dot plot</span><span class="tag">what-if</span></div>
         <div class="who">Owner: Osama Mohammed</div></div></a>
   </div>
@@ -108,7 +108,7 @@ d3.json("data/cleaning_log.json").then(L => {
     .html(d => `<td>${d.rule.replace(/^\d /, "")}</td><td class="num">${f(d.rows_before)}</td><td class="num">${f(d.removed)}</td><td>${d.why}</td>`);
   const a = L.anomalies, wd = a.weekday_2015_2021;
   const rows = [
-    ["Sunday missing, Monday doubled", `2015-2021: Mon ${f(wd.Mon)} vs Tue ${f(wd.Tue)}, Sun ${wd.Sun}. Sunday was a working day before 2022, so Sunday registrations seem to be folded into Monday. We never go below monthly granularity.`],
+    ["Sunday missing, Monday doubled", `2015-2021: Mon ${f(wd.Mon)} vs Tue ${f(wd.Tue)}, Sun ${wd.Sun}. Sunday was a working day before 2022, so Sunday registrations seem to be  aggregated with Monday. We never go coarser than monthly granularity.`],
     ["Implausible dates", `Dates back to 1967, and ${f(a.id_year_vs_date_year_mismatch)} rows whose transaction-ID year differs from the date year. We kept 2015 onwards.`],
     ["Zero / extreme prices", `AED/m² from ${a.min_meter_sale_price} to ${f(Math.round(a.max_meter_sale_price))}; one transaction worth AED ${f(a.max_actual_worth)}. Bounded and summarised with medians.`],
     ["Station names", `${a.missing_nearest_metro_pct}% have no nearest station; ${f(a.tram_stops_in_metro_column)} rows name a tram stop; renamed stations and a typo. Mapped to station codes (Vis 1).`],
