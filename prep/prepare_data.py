@@ -186,7 +186,7 @@ for f in geo["features"]:
     p = f["properties"]
     k = int(p["COMM_NUM"])
     comm_info[k] = {"name": p["CNAME_E"].title().replace("  ", " "), "lat": p["Latitude"], "lon": p["Longitude"],
-                    "km2": p["Area Sq Km"], "pop2019": p["Population 2019"], "pop2018": p["Population 2018"]}
+                    "km2": p["Area Sq Km"], "pop2019": p["Population 2019"]}
     g = shape(f["geometry"]).simplify(0.0006, preserve_topology=True)
     gj = mapping(g)
     def rnd(c):
@@ -267,7 +267,6 @@ def boot_median(v, n=1000):
 # ======================================================== VIS 1: stations
 mv = pd.read_csv(RAW / "metro_venues_total.csv")
 mv_name2code = {v["name"]: k for k, v in ST.items()}
-CATS = list(mv.category_name.unique())
 venues_by_station = {}
 for name, g in mv.groupby("station_name"):
     code = mv_name2code.get(name)
@@ -292,7 +291,6 @@ def station_stats(df):
             "price": round(float(df.actual_worth.median())), "size": round(float(df.procedure_area.median()), 1),
             "offplan": round(float(df.offplan.mean()), 3),
             "dist": None if df.dist_km.isna().all() else round(float(df.dist_km.median()), 2),
-            "far": None if df.dist_km.isna().all() else round(float((df.dist_km > 2).mean()), 3),
             "mix": [int(mix.get(k, 0)) for k in SEG_ORDER],
             "hist": [int(h) for h in hist],
             "comms": [[int(c), int(n)] for c, n in top.items()]}
@@ -329,7 +327,7 @@ comm_names = {k: {"name": comm_info[k]["name"], "known": KNOWN.get(k, (comm_info
               for k in comm_info}
 for st in stations_out:
     st["riders"] = RIDERS.get(st["code"])          # {year: million riders} or None (not published)
-json.dump({"stations": stations_out, "dubai": dubai_stats, "venueCats": CATS, "segs": SEG_ORDER,
+json.dump({"stations": stations_out, "dubai": dubai_stats, "segs": SEG_ORDER,
            "logBins": [round(x, 4) for x in LOG_BINS], "comms": comm_names, "freehold2006": FREEHOLD_2006},
           open(OUT / "vis1_stations.json", "w"), separators=(",", ":"))
 
@@ -346,7 +344,7 @@ def trajectory(df):
     for y in YEARS:
         d = df[df.year == y]
         n = len(d)
-        out.append({"y": y, "n": n, "nA": round(n * (ANNUALISE_2026 if y == 2026 else 1), 1),
+        out.append({"y": y, "nA": round(n * (ANNUALISE_2026 if y == 2026 else 1), 1),
                     "med": round(float(d.meter_sale_price.median())) if n >= 5 else None,
                     "medR": round(float(d.mps_real.median())) if n >= 5 else None,     # 2015 AED
                     "op": round(float(d.offplan.mean()), 3) if n >= 5 else None})
@@ -356,7 +354,6 @@ def trajectory(df):
 for k in vis2_comms:
     d = s[s.comm_num == k]
     rec = {"c": int(k), "name": comm_info[k]["name"], "known": KNOWN.get(k, (comm_info[k]["name"], ""))[0],
-           "short": KNOWN.get(k, ("", comm_info[k]["name"][:4].upper()))[1],
            "lat": comm_info[k]["lat"], "lon": comm_info[k]["lon"], "n": int(len(d)), "traj": trajectory(d)}
     for col, suffix in (("meter_sale_price", ""), ("mps_real", "R")):      # nominal and inflation-adjusted
         base = d[d.year.between(*BASE)][col].values
@@ -393,17 +390,13 @@ for col, suffix in (("meter_sale_price", ""), ("mps_real", "R")):
     b_ = s[s.year.between(*BASE)][col].median(); n_ = s[s.year.between(*NOW)][col].median()
     ref["level" + suffix] = round(float(n_)); ref["growth" + suffix] = round(float(n_ / b_ - 1), 3)
 ref["offplan"] = round(float(s[s.year.between(*NOW)].offplan.mean()), 3)
-json.dump({"comms": traj, "dubai": all_traj, "years": YEARS, "base": BASE, "now": NOW,
-           "annualise2026": round(ANNUALISE_2026, 4), "cpi": {str(y): round(v, 2) for y, v in CPI.items()}, "ref": ref},
+json.dump({"comms": traj, "dubai": all_traj, "annualise2026": round(ANNUALISE_2026, 4), "ref": ref},
           open(OUT / "vis2_trajectories.json", "w"), separators=(",", ":"))
 
 # ======================================================== VIS 3: ranker
 ven = pd.read_csv(RAW / "dubai_venues.csv")
 vg = ven.groupby("COMM_NUM")
 venue_n = vg.size()
-venue_rating = vg["Rating"].mean()
-venue_food = ven[ven["Venue Category"].str.contains("Restaurant|Café|Coffee|Bakery|Food|Joint|Pizza|Breakfast",
-                                                     regex=True, na=False)].groupby("COMM_NUM").size()
 
 recent = s[s.year.between(*NOW)]
 rc = recent.groupby("comm_num").size()
@@ -421,23 +414,19 @@ for k in vis3_comms:
         return round(float(np.median(now) / np.median(base) - 1), 3) if len(base) >= 8 and len(now) >= 8 else None
     rank_comms.append({
         "c": int(k), "name": ci["name"], "known": KNOWN.get(k, (ci["name"], ""))[0],
-        "lat": ci["lat"], "lon": ci["lon"], "km2": round(ci["km2"], 2),
-        "pop": int(ci["pop2019"] or 0),
+        "lat": ci["lat"], "lon": ci["lon"],
         "density": round((ci["pop2019"] or 0) / ci["km2"]) if ci["km2"] else None,
         "metroKm": round(dmin, 2), "metro": f"{best[1]} ({best[0]})",
         "venues": int(venue_n.get(k, 0)), "venueCap": bool(venue_n.get(k, 0) >= 100),
-        "food": int(venue_food.get(k, 0)),
-        "rating": None if pd.isna(venue_rating.get(k, np.nan)) else round(float(venue_rating.get(k)), 2),
         "growth": growth_of("meter_sale_price"),          # nominal
         "growthReal": growth_of("mps_real"),              # after UAE inflation (World Bank CPI)
-        "freehold2006": int(k) in FREEHOLD_2006,
     })
-# transaction-level recent sales for live affordability: [comm, segIdx, price, m2, offplan, year]
+# transaction-level recent sales for live affordability: [comm, segIdx, price, m2, offplan]
 seg_idx = {k: i for i, k in enumerate(SEGS)}
 rows = [[int(r.comm_num), seg_idx.get(r.seg, -1), int(r.actual_worth), round(float(r.procedure_area), 1),
-         int(r.offplan), int(r.year)]
+         int(r.offplan)]
         for r in recent[recent.comm_num.isin(vis3_comms)].itertuples()]
-json.dump({"comms": rank_comms, "segs": SEGS, "sales": rows, "period": NOW,
+json.dump({"comms": rank_comms, "segs": SEGS, "sales": rows,
            "metroLines": {route: sorted([[v["code"], v["lat"], v["lon"]] for v in ST.values() if v["route"] == route])
                           for route in ("Red", "Green", "Expo")}},
           open(OUT / "vis3_ranker.json", "w"), separators=(",", ":"))

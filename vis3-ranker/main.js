@@ -62,7 +62,7 @@ const REASON = {
 // STEP 1, Load the data
 // vis3_ranker.json is made by prep/prepare_data.py: one record per
 // community (growth after inflation, metro distance, venues, density)
-// plus every cleaned 2024-26 sale as [community, type, price, m², off-plan, year].
+// plus every cleaned 2024-26 sale as [community, type, price, m², off-plan].
 // =====================================================================
 Promise.all([
   d3.json("../data/vis3_ranker.json"),
@@ -85,7 +85,7 @@ function start(data, geo) {
   const SEGS = ["All"].concat(data.segs);
   const comms = data.comms.map((c) => ({ ...c, sales: [] }));
   const byC = new Map(comms.map((c) => [c.c, c]));
-  data.sales.forEach(([c, seg, price, m2, op, yr]) => byC.get(c).sales.push({ seg, price, m2, op, yr }));
+  data.sales.forEach(([c, seg, price, m2, op]) => byC.get(c).sales.push({ seg, price, m2, op }));
 
   // --- scales -------------------------------------------------------------
   // Budget slider: a LOG scale, so AED 300k-1M gets as much slider room as 3M-10M.
@@ -343,18 +343,6 @@ function start(data, geo) {
     head.append("g").attr("class", "colhead" + (state.sortBy === "score" ? " on" : ""))
       .on("click", () => sortBy("score"))
       .append("text").attr("x", COL.score).attr("y", HEAD - 8).text("Score ▾ (out of 100)");
-
-    // Mini stacked bar: how the weights are split
-    let acc = 0;
-    const totalWeight = d3.sum(state.w) || 1;
-    state.w.forEach((w, i) => {
-      if (!w) return;
-      head.append("rect").attr("x", COL.score + sx(acc / totalWeight)).attr("y", 8).attr("height", 8).attr("rx", 2)
-        .attr("width", Math.max(0, sx(w / totalWeight) - 2)).attr("fill", COLORS[i]);
-      acc += w;
-    });
-    head.append("text").attr("x", COL.score - 6).attr("y", 15).attr("text-anchor", "end").attr("font-size", 10)
-      .attr("fill", "var(--text-muted)").text("weights");
 
     const SHORT = {
       fit: "Budget", value: "Value", growth: "Growth", liq: "Resale", ready: state.pref === "ready" ? "Ready" : "Off-pl.",

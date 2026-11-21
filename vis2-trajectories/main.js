@@ -56,11 +56,10 @@ function start(data) {
 
   // metric:   what colours the squares: "level" | "growth" | "offplan"
   // vsup:     "on" = fade uncertain squares, "off" = plain 8 colour steps
-  // story:    "on" = show the caption under the scatterplot
   // real:     "nominal" AED or "real" (2015 AED, after inflation)
   // year:     the year shown by the slider (2015-2026)
   // selected: up to 3 community codes drawn in the scatterplot
-  const state = { metric: "level", vsup: "on", story: "on", real: "nominal", year: 2026, selected: [681, 345, 648] };
+  const state = { metric: "level", vsup: "on", real: "nominal", year: 2026, selected: [681, 345, 648] };
 
   const comms = data.comms;
   const byC = new Map(comms.map((c) => [c.c, c]));
@@ -246,7 +245,6 @@ function start(data) {
   const xAxisG = cs.append("g").attr("class", "axis").attr("transform", `translate(0,${CH - m.b})`);
   const yAxisG = cs.append("g").attr("class", "axis").attr("transform", `translate(${m.l},0)`);
   const gridG = cs.append("g").attr("class", "gridline");
-  cs.append("g").attr("class", "phase");
   const pathsG = cs.append("g");
   cs.append("text").attr("x", CW - m.r).attr("y", CH - 8).attr("text-anchor", "end").attr("font-size", 11)
     .text("sales per year in the 10% sample (log scale) -->");
@@ -322,7 +320,7 @@ function start(data) {
     d3.select("#play").text("▶ Play");
   }
 
-  // Buttons: metric, nominal/real, VSUP on/off, story on/off
+  // Buttons: metric, nominal/real, VSUP on/off
   onButtonGroupClick((key, value) => {
     state[key] = value;
     markButtonGroups(state);
@@ -558,11 +556,11 @@ function start(data) {
       if (s._ly != null) d3.select(this).select(".lbl").attr("y", s._ly);
     });
 
-    // Story caption about the grey Dubai path (kept off the chart itself)
+    // Caption about the grey Dubai path (kept off the chart itself)
     const at = (yy) => data.dubai.find((p) => p.y === yy);
-    d3.select("#phase-caption").html(state.story === "on"
-      ? `All of Dubai (grey): 2015-20 sat still, with flat sales and prices drifting down (${fmt(at(2015).cur)} --> ${fmt(at(2020).cur)} AED/m²). 2021-25 shot up and to the right: ${fmt(at(2025).cur)} AED/m² and ${d3.format(".1f")(at(2025).nA / at(2020).nA)}x the sales.`
-      : "");
+    d3.select("#phase-caption").html(
+      `All of Dubai (grey): 2015-20 sat still, with flat sales and prices drifting down (${fmt(at(2015).cur)} --> ${fmt(at(2020).cur)} AED/m²). 2021-25 shot up and to the right: ${fmt(at(2025).cur)} AED/m² and ${d3.format(".1f")(at(2025).nA / at(2020).nA)}x the sales.`
+    );
 
     drawLine(S);
 

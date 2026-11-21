@@ -30,7 +30,7 @@ data so `prep/prepare_data.py` can read them. Retrieved 20 November 2026.
 - **How it is linked:** by **station code** in `dubai_metro_stations.geojson`. Names were matched by hand,
   including renames: "Sharaf DG" on the Green Line is the former Al Fahidi (G25), renamed 24 November 2020;
   "Dubai Multi-Commodities Centre" is DMCC (R37). All 47 rows matched one of 14 stations.
-- **Used in:** Vis 1 ("RTA riders" switch below the line, tooltips, station panel, story note).
+- **Used in:** Vis 1 (the "Metro riders (RTA)" button for the bars, tooltips, the station profile and the first finding card).
 - **Caveat:** RTA only publishes its busiest stations, so 42 of the 56 stations have no figure (shown as "-").
   The full trip-level data is on Dubai Pulse (`rta_metro_ridership-open`), but it needs an access request.
 
