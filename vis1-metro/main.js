@@ -84,13 +84,15 @@ function start(data, geo) {
     return { year, v: byYear[year], all: byYear };
   }
    
-  // Real names of the Route 2020 stations (the DLD file only has codes)
-  const ROUTE2020_NAMES = {
-    R70: "NAME HERE",
-    R71: "NAME HERE",
-    R72: "NAME HERE",
-    R73: "NAME HERE",
+   const ROUTE2020_NAMES = {
+    R70: "The Gardens",
+    R71: "Discovery Gardens",
+    R72: "Al Furjan",
+    R73: "Jumeirah Golf Estates",
+    R74: "Dubai Investments Park",
+    R75: "Dubai Investments Park 2",   
   };
+ 
    
   // Short display names
   function label(st) {
@@ -320,7 +322,7 @@ function start(data, geo) {
       },
            {
         big: `${fmt(recent("G30").q[2] / 1000)}k vs ${fmt(recent("R25").q[2] / 1000)}k`,
-                txt: `of homes sold in 2021-26 have no metro or tram stop recorded in the DLD file. This is a blank in the data, not geography: the group includes places like Dubai Marina.`,
+                       txt: `AED/m² near Creek station (Green Line) vs near Burj Khalifa/Dubai Mall station. Compared by station, not neighbourhood: most Burj Khalifa/Dubai Mall buyers are in Sobha Hartland, not Downtown.`,
         go: () => { state.bar = "sales"; state.selected = "G30"; },
       },
     ];
