@@ -57,7 +57,16 @@ const REASON = {
   fit: "fits budget", value: "good value", growth: "rising prices", liq: "easy resale",
   ready: null, metro: "near metro", amen: "lots nearby", estab: "established",
 };
-
+// Real names of the Route 2020 stations (the DLD file only has codes)
+const ROUTE2020_NAMES = {
+  R70: "The Gardens",
+  R71: "Discovery Gardens",
+  R72: "Al Furjan",
+  R73: "Jumeirah Golf Estates",
+  R74: "Dubai Investments Park",
+  R75: "Dubai Investments Park 2",
+};
+const stationName = (s) => String(s).replace(/Stations? (R7\d)/, (m, code) => ROUTE2020_NAMES[code] || m);
 // =====================================================================
 // STEP 1, Load the data
 // vis3_ranker.json is made by prep/prepare_data.py: one record per
@@ -303,7 +312,7 @@ function start(data, geo) {
       h += `<div class="t-row"><span><span class="sw2" style="background:${COLORS[i]}"></span>${cr.name}</span><span>${shown} (score ${Math.round(d.s[cr.k].v * 100)})</span></div>`;
     });
     const nominal = d.growth != null ? ` Nominal growth ${pctSigned(d.growth)}.` : "";
-    return h + `<div class="t-note">Score ${Math.round(d.score * 100)} / 100. Nearest station: ${d.metro}.${nominal}</div>`;
+     return h + `<div class="t-note">Score ${Math.round(d.score * 100)} / 100. Nearest station: ${stationName(d.metro)}.${nominal}</div>`;
   }
 
   // =====================================================================
@@ -321,12 +330,24 @@ function start(data, geo) {
     drawDetail();
   }
 
-  // The one-sentence answer at the top
+   // The one-sentence answer at the top
   function drawAnswer(R) {
     const what = state.seg === "All" ? "a home"
       : state.seg === "Villa" ? "a villa or townhouse"
       : state.seg === "Studio" ? "a studio"
       : "a " + state.seg + " flat";
+
+    // Nothing fits: no ranked community has a single sale within budget
+    if (R.length && !R.some((d) => d.raw.fit > 0)) {
+      const cheapest = R
+        .map((d) => ({ d, p: d3.median(d.cur, (s) => s.price) }))
+        .sort((a, b) => a.p - b.p)[0];
+      d3.select("#answer").html(
+        `With ${aed(state.budget)} for ${what}: <b>nothing fits at this budget</b>. The cheapest option is <b>${cheapest.d.known.replace(/ \(.*\)/, "")}</b> at ${aed(cheapest.p)} (median sale price).`
+      );
+      return;
+    }
+
     const top = R.slice(0, 3).map((d) => d.known.replace(/ \(.*\)/, ""));
     const fitTop = R[0] ? Math.round(R[0].raw.fit * 100) : 0;
     d3.select("#answer").html(top.length
