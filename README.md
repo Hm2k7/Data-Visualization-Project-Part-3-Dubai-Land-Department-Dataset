@@ -157,4 +157,4 @@ Hassan Mousa (24000292) · Khalid Albadda (24000542) · Osama Mohammed (24001318
 |---|---|---|
 | **Hassan Mousa** (24000292) | Vis 1 · Along the Line | Station-name mapping, station statistics and RTA ridership data; the line-diagram visualization and station profile; data-quality analysis; presentation intro and closing |
 | **Khalid Albadda** (24000542) | Vis 2 · Boom Paths | Cleaning rules, yearly community statistics, bootstrap intervals and inflation adjustment; the grid map, uncertainty colours, connected scatterplot and price line; shared styling; checking all figures |
-| **Osama Mohammed** (24001318) | Vis 3 · Where Should I Buy? | Ranking criteria (venues, population, metro distance, freehold areas); the ranking table, map and budget dot plot; landing page and GitHub Pages site |
+| **Osama Mohammed** (24001318) | Vis 3 · Where Should I Buy? | Ranking criteria (venues, population, metro distance, freehold areas); the ranking table, map and budget dot plot; landing page|
