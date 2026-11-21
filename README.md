@@ -92,8 +92,11 @@ metro stations, venues, population)                  World Bank · RTA · Dubai 
 - **`prep/prepare_data.py`** reads the course files and the outside data, applies the cleaning rules, matches names
   across datasets, computes medians, percentiles and bootstrap intervals, and writes one compact JSON file per
   visualization. It also records every cleaning step and anomaly in `data/cleaning_log.json`.
-- **Each visualization** is one HTML page that loads its JSON file with D3 and draws everything in SVG. All three share
-  one stylesheet (`assets/common.css`), so they look like one project.
+- **Each visualization** is an HTML page (layout and text) plus a `main.js` that loads its JSON file with D3 and draws
+  everything in SVG. Every `main.js` follows the same five steps: load the data, set up state and scales, draw (the
+  data join), wire the interactions, update. Every interaction changes the state, then update redraws from it.
+  The three pages share one stylesheet (`assets/common.css`) and one small helpers file (`assets/helpers.js`:
+  number formats, tooltip, buttons), so they look and work like one project. `CODE_GUIDE.md` walks through each file.
 - **The landing page** reads `cleaning_log.json` to show the cleaning table and the data problems that were found.
 
 ### Data cleaning
@@ -126,10 +129,11 @@ Full citations, matching rules and caveats are in `data/external/SOURCES.md`.
 
 ```
 index.html                 landing page
-assets/                    shared stylesheet and preview images
-vis1-metro/                Visualization 1 · Along the Line
-vis2-trajectories/         Visualization 2 · Boom Paths
-vis3-ranker/               Visualization 3 · Where Should I Buy?
+CODE_GUIDE.md              walkthrough of the code, one section per visualization
+assets/                    shared stylesheet, helpers.js and preview images
+vis1-metro/                Visualization 1 · Along the Line (index.html + main.js)
+vis2-trajectories/         Visualization 2 · Boom Paths (index.html + main.js)
+vis3-ranker/               Visualization 3 · Where Should I Buy? (index.html + main.js)
 data/                      processed data loaded by the pages
 data/external/             outside data and SOURCES.md
 prep/prepare_data.py       data cleaning and preparation
@@ -157,4 +161,4 @@ Hassan Mousa (24000292) · Khalid Albadda (24000542) · Osama Mohammed (24001318
 |---|---|---|
 | **Hassan Mousa** (24000292) | Vis 1 · Along the Line | Station-name mapping, station statistics and RTA ridership data; the line-diagram visualization and station profile; data-quality analysis; presentation intro and closing |
 | **Khalid Albadda** (24000542) | Vis 2 · Boom Paths | Cleaning rules, yearly community statistics, bootstrap intervals and inflation adjustment; the grid map, uncertainty colours, connected scatterplot and price line; shared styling; checking all figures |
-| **Osama Mohammed** (24001318) | Vis 3 · Where Should I Buy? | Ranking criteria (venues, population, metro distance, freehold areas); the ranking table, map and budget dot plot; landing page|
+| **Osama Mohammed** (24001318) | Vis 3 · Where Should I Buy? | Ranking criteria (venues, population, metro distance, freehold areas); the ranking table, map and budget dot plot; landing page and GitHub Pages site |
