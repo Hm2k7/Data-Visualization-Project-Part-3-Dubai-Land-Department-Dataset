@@ -83,10 +83,18 @@ function start(data, geo) {
     const year = d3.max(Object.keys(byYear), Number);
     return { year, v: byYear[year], all: byYear };
   }
-
+   
+  // Real names of the Route 2020 stations (the DLD file only has codes)
+  const ROUTE2020_NAMES = {
+    R70: "NAME HERE",
+    R71: "NAME HERE",
+    R72: "NAME HERE",
+    R73: "NAME HERE",
+  };
+   
   // Short display names
   function label(st) {
-    if (/^Stations? R7/.test(st.name)) return "Route 2020 station " + st.code;
+        if (ROUTE2020_NAMES[st.code]) return ROUTE2020_NAMES[st.code];
     return st.name
       .replace("Burj Khalifa / Dubai Mall", "Burj Khalifa/Dubai Mall")
       .replace("Abu Dhabi Commercial Bank", "ADCB")
@@ -310,9 +318,9 @@ function start(data, geo) {
         txt: `of homes sold in 2021-26 have no metro or tram stop at all: new desert-edge communities.`,
         scrollOnly: true,
       },
-      {
+           {
         big: `${fmt(recent("G30").q[2] / 1000)}k vs ${fmt(recent("R25").q[2] / 1000)}k`,
-        txt: `AED/m² at Creek (Green Line) vs Burj Khalifa/Dubai Mall: the new waterfront now out-prices Downtown.`,
+                txt: `of homes sold in 2021-26 have no metro or tram stop recorded in the DLD file. This is a blank in the data, not geography: the group includes places like Dubai Marina.`,
         go: () => { state.bar = "sales"; state.selected = "G30"; },
       },
     ];
@@ -336,7 +344,7 @@ function start(data, geo) {
       <h2>${pct(t.n / total)} of homes sold in 2021-2026 have no metro or tram stop in the DLD file</h2>
       <div class="sub" style="margin-bottom:0">${fmt(t.n)} of ${fmt(total)} sales.
         Typical price AED ${fmt(t.q[2])} per m²; ${pct(t.offplan)} off-plan.
-        Mostly new master communities on the desert edge: ${topFive}.</div>`);
+        Mostly communities where the DLD station column is blank: ${topFive}.</div>`);
   }
 
   // =====================================================================
