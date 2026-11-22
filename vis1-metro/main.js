@@ -317,12 +317,12 @@ function start(data, geo) {
       },
       {
         big: pct(none.n / total),
-        txt: `of homes sold in 2021-26 have no metro or tram stop at all: new desert-edge communities.`,
+        txt: `of homes sold in 2021-26 have no metro or tram stop in the DLD file. The station column is blank for these sales.`,
         scrollOnly: true,
       },
            {
         big: `${fmt(recent("G30").q[2] / 1000)}k vs ${fmt(recent("R25").q[2] / 1000)}k`,
-                       txt: `AED/m² near Creek station (Green Line) vs near Burj Khalifa/Dubai Mall station. Compared by station, not neighbourhood: most Burj Khalifa/Dubai Mall buyers are in Sobha Hartland, not Downtown.`,
+                       txt: `AED/m² near Creek station (Green Line) vs near Burj Khalifa/Dubai Mall station. Compared by station, not neighbourhood: more Burj Khalifa/Dubai Mall buyers are in Sobha Hartland than in Downtown.`,
         go: () => { state.bar = "sales"; state.selected = "G30"; },
       },
     ];
