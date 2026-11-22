@@ -599,7 +599,7 @@ function start(data, geo) {
   function drawHistogram(t, dubai) {
     const svg = d3.select("#p-hist");
     svg.selectAll("*").remove();
-    const W2 = 340, H = 120, m = { l: 6, r: 6, t: 18, b: 22 };
+    const W2 = 340, H = 120, m = { l: 44, r: 16, t: 18, b: 22 }; // room on the left for the y-axis, on the right for "100k"
     const bins = data.logBins; // bin edges in log10(AED/m²)
     const hx = d3.scaleLog().domain([1000, 100000]).range([m.l, W2 - m.r]);
     const share = (counts) => {
@@ -608,7 +608,13 @@ function start(data, geo) {
     };
     const dubaiShare = share(dubai.hist);
     const stationShare = t ? share(t.hist) : null;
-    const hy = d3.scaleLinear().domain([0, d3.max(dubaiShare.concat(stationShare || []))]).range([H - m.b, m.t]);
+    const hy = d3.scaleLinear().domain([0, d3.max(dubaiShare.concat(stationShare || []))]).nice().range([H - m.b, m.t]);
+
+    // y-axis: bar height = share of the sales in each price range
+    svg.append("g").attr("class", "axis").attr("transform", `translate(${m.l},0)`)
+      .call(d3.axisLeft(hy).ticks(3).tickFormat(d3.format(".0%")).tickSize(3));
+    svg.append("text").attr("class", "axis-cap").attr("text-anchor", "middle")
+      .attr("transform", `translate(8,${(m.t + H - m.b) / 2}) rotate(-90)`).text("share of sales");
 
     svg.append("g").attr("class", "axis").attr("transform", `translate(0,${H - m.b})`)
       .call(d3.axisBottom(hx).tickValues([1000, 3000, 10000, 30000, 100000]).tickFormat((d) => d / 1000 + "k").tickSize(3));
@@ -626,7 +632,7 @@ function start(data, geo) {
       .concat([[hx(10 ** bins[bins.length - 1]), hy(dubaiShare[dubaiShare.length - 1])]]);
     svg.append("path").attr("d", d3.line().curve(d3.curveStepAfter)(stepPoints))
       .attr("fill", "none").attr("stroke", "var(--text-primary)").attr("stroke-width", 1.5);
-    svg.append("text").attr("x", m.l).attr("y", 11).attr("font-size", 11)
+    svg.append("text").attr("x", 6).attr("y", 11).attr("font-size", 11)
       .html(`<tspan fill="#2a78d6">■ this station</tspan>  <tspan fill="var(--text-primary)">line = all of Dubai</tspan>`);
   }
 
