@@ -181,8 +181,8 @@ function start(data, geo) {
   const table = d3.select("#table").attr("width", TW);
   const hatch = table.append("defs").append("pattern").attr("id", "hatch") // for missing values
     .attr("patternUnits", "userSpaceOnUse").attr("width", 4).attr("height", 4).attr("patternTransform", "rotate(45)");
-  hatch.append("rect").attr("width", 4).attr("height", 4).attr("fill", "#fff");
-  hatch.append("line").attr("y2", 4).attr("stroke", "#b9b6ad").attr("stroke-width", 2);
+  hatch.append("rect").attr("width", 4).attr("height", 4).attr("fill", "var(--halo)");
+  hatch.append("line").attr("y2", 4).attr("stroke", "var(--faded)").attr("stroke-width", 2);
   const head = table.append("g");
   const body = table.append("g").attr("transform", `translate(0,${HEAD})`);
 
@@ -194,9 +194,9 @@ function start(data, geo) {
   const path = d3.geoPath(proj);
   mapSvg.append("clipPath").attr("id", "mclip").append("rect").attr("width", 366).attr("height", 330);
   const mapG = mapSvg.append("g").attr("clip-path", "url(#mclip)");
-  const baseFill = (code) => (byC.has(code) ? "#e2e0d9" : "#efeee9");
+  const baseFill = (code) => (byC.has(code) ? "var(--land-active)" : "var(--land-faint)");
   const polys = mapG.append("g").selectAll("path").data(geo.features).join("path")
-    .attr("d", path).attr("fill", (f) => baseFill(f.properties.c)).attr("stroke", "#fff").attr("stroke-width", 0.6);
+    .attr("d", path).attr("fill", (f) => baseFill(f.properties.c)).attr("stroke", "var(--halo)").attr("stroke-width", 0.6);
   drawMetroLines();
   const markers = mapG.append("g");
 
@@ -436,7 +436,7 @@ function start(data, geo) {
       return;
     }
     const up = d.prevRank > d.rank;
-    t.text((up ? "▲" : "▼") + Math.abs(d.prevRank - d.rank)).attr("fill", up ? "#006300" : "#b8312f");
+    t.text((up ? "▲" : "▼") + Math.abs(d.prevRank - d.rank)).attr("fill", up ? "var(--up)" : "var(--down)");
   }
 
   // The two criteria that add most to the score (and score at least 0.6)
@@ -476,7 +476,7 @@ function start(data, geo) {
       .data(cells)
       .join((e) => {
         const c = e.append("g").attr("class", "cell");
-        c.append("rect").attr("class", "track").attr("y", 5).attr("height", RH - 11).attr("rx", 2).attr("fill", "#f1f0ec").attr("width", AW);
+        c.append("rect").attr("class", "track").attr("y", 5).attr("height", RH - 11).attr("rx", 2).attr("fill", "var(--track)").attr("width", AW);
         c.append("rect").attr("class", "bar").attr("y", 5).attr("height", RH - 11).attr("rx", 2).attr("width", 0);
         return c;
       })
@@ -498,7 +498,7 @@ function start(data, geo) {
       .data(top, (d) => d.c)
       .join((e) => {
         const g = e.append("g").attr("class", "mk").style("cursor", "pointer");
-        g.append("circle").attr("r", 10).attr("stroke", "#fff").attr("stroke-width", 2);
+        g.append("circle").attr("r", 10).attr("stroke", "var(--halo)").attr("stroke-width", 2);
         g.append("text").attr("text-anchor", "middle").attr("dy", 4).attr("font-size", 10.5).attr("font-weight", 600).attr("fill", "#fff");
         g.attr("transform", (d) => `translate(${at(d)})`);
         return g;
@@ -514,8 +514,8 @@ function start(data, geo) {
 
     const rightSide = (d) => at(d)[0] > 230;
     markers.selectAll("text.toplab").data(top.slice(0, 3), (d) => d.c).join("text").attr("class", "toplab")
-      .attr("font-size", 11.5).attr("fill", "#0b0b0b")
-      .style("paint-order", "stroke").style("stroke", "#fff").style("stroke-width", "4px").style("stroke-linejoin", "round")
+      .attr("font-size", 11.5).attr("fill", "var(--text-primary)")
+      .style("paint-order", "stroke").style("stroke", "var(--halo)").style("stroke-width", "4px").style("stroke-linejoin", "round")
       .attr("pointer-events", "none")
       .attr("x", (d) => at(d)[0] + (rightSide(d) ? -14 : 14))
       .attr("text-anchor", (d) => (rightSide(d) ? "end" : "start"))
@@ -531,7 +531,7 @@ function start(data, geo) {
       .attr("fill", (d) => (d.c === state.hover ? "var(--accent)" : "var(--text-primary)"))
       .attr("r", (d) => (d.c === state.hover ? 13 : 10));
     polys.attr("fill", (f) =>
-      f.properties.c === state.hover ? "#b7d3f6" : f.properties.c === state.selected ? "#cde2fb" : baseFill(f.properties.c));
+      f.properties.c === state.hover ? "var(--map-hover)" : f.properties.c === state.selected ? "var(--map-sel)" : baseFill(f.properties.c));
   }
 
   // Budget check: one dot per sale (Wilkinson dot plot), left of the line = within budget
@@ -571,7 +571,7 @@ function start(data, geo) {
     svg.append("g").attr("class", "axis").attr("transform", `translate(0,${H - m.b})`)
       .call(d3.axisBottom(x).tickValues([3e5, 1e6, 3e6, 1e7, 3e7]).tickFormat((v) => (v >= 1e6 ? v / 1e6 + "M" : v / 1e3 + "k")).tickSize(3));
     svg.append("rect").attr("x", m.l).attr("y", m.t).attr("width", Math.max(0, x(state.budget) - m.l))
-      .attr("height", H - m.b - m.t).attr("fill", "#f3f2ee");
+      .attr("height", H - m.b - m.t).attr("fill", "var(--band)");
     svg.selectAll("circle").data(dots).join("circle")
       .attr("cx", (d) => d.x)
       .attr("cy", (d) => H - m.b - 4 - d.k * (r * 2 + 0.6))

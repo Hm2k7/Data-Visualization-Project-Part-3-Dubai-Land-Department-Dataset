@@ -13,8 +13,29 @@
   --series-5: #e87ba4; --series-6: #008300; --series-7: #6250d6; --series-8: #e34948;
   --red-line: #e34948; --green-line: #008300; --tram: #6250d6;
   --accent: #2a78d6;
+  /* neutrals used inside the charts (hover rows, map land, white halos...) */
+  --hover: #efede8; --selected: #e3eefc; --halo: #fff; --on-ink: #fff;
+  --land: #e9e7e1; --land-faint: #efeee9; --land-active: #e2e0d9; --track: #f1f0ec; --band: #f3f2ee;
+  --map-hover: #b7d3f6; --map-sel: #cde2fb;
+  --dim-text: #c9c6bd; --dim-fill: #e4e2dc; --dim-stroke: #d6d3cb; --dim-iqr: #eceae5; --faded: #b9b6ad;
+  --ink-bar: #5d5c57; --slot-3: #222222; --up: #006300; --down: #b8312f;
   --sans: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
+/* Dark mode: theme.js sets data-theme="dark" on <html> */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-0: #161615; --surface-1: #1f1f1d; --rule: #34332f; --rule-strong: #4a4945;
+  --text-primary: #ecebe7; --text-secondary: #b4b2ab; --text-muted: #8a8880;
+  --accent: #5b9bea;
+  --hover: #2b2a27; --selected: #1e3452; --halo: #1f1f1d; --on-ink: #161615;
+  --land: #34332f; --land-faint: #292826; --land-active: #403f3a; --track: #2b2a27; --band: #262523;
+  --map-hover: #3a6aa6; --map-sel: #2a4a72;
+  --dim-text: #55534e; --dim-fill: #34332f; --dim-stroke: #403f3a; --dim-iqr: #2b2a27; --faded: #6d6b65;
+  --ink-bar: #a8a69f; --slot-3: #e6e5e0; --up: #3fb950; --down: #f2645f;
+}
+.theme-toggle { position: fixed; top: 12px; right: 14px; z-index: 60; font: inherit; font-size: 12px; padding: 4px 10px; border-radius: 3px;
+  border: 1px solid var(--rule-strong); background: var(--surface-1); color: var(--text-secondary); cursor: pointer; }
+.theme-toggle:hover { border-color: var(--text-secondary); }
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--surface-0); color: var(--text-primary); font-family: var(--sans); font-size: 14px; line-height: 1.45; font-variant-numeric: tabular-nums;
   font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }   /* keep "-->" as typed */
@@ -33,11 +54,11 @@ h1 { font-size: 25px; line-height: 1.2; margin: 6px 0 6px; font-weight: 600; }
 .seg { display: inline-flex; border: 1px solid var(--rule-strong); border-radius: 3px; overflow: hidden; }
 .seg button { font: inherit; font-size: 13px; padding: 5px 11px; border: 0; background: transparent; color: var(--text-secondary); cursor: pointer; border-right: 1px solid var(--rule); }
 .seg button:last-child { border-right: 0; }
-.seg button:hover { background: #efede8; }
-.seg button.on { background: var(--text-primary); color: #fff; }
+.seg button:hover { background: var(--hover); }
+.seg button.on { background: var(--text-primary); color: var(--on-ink); }
 .chip { font: inherit; font-size: 12px; padding: 4px 10px; border-radius: 3px; border: 1px solid var(--rule-strong); background: var(--surface-1); cursor: pointer; color: var(--text-secondary); }
 .chip:hover { border-color: var(--text-secondary); }
-.chip.on { background: var(--text-primary); color: #fff; border-color: var(--text-primary); }
+.chip.on { background: var(--text-primary); color: var(--on-ink); border-color: var(--text-primary); }
 
 .card { background: var(--surface-1); border: 1px solid var(--rule); border-radius: 4px; padding: 14px 16px; }
 .card h2 { font-size: 15px; margin: 0 0 2px; font-weight: 600; }
@@ -51,7 +72,7 @@ svg .axis text { font-size: 11px; fill: var(--text-muted); }
 svg .gridline line { stroke: var(--rule); }
 svg .gridline path { display: none; }
 
-.tooltip { position: fixed; pointer-events: none; z-index: 50; background: #fff; border: 1px solid var(--rule-strong); border-radius: 3px;
+.tooltip { position: fixed; pointer-events: none; z-index: 50; background: var(--halo); border: 1px solid var(--rule-strong); border-radius: 3px;
   padding: 8px 10px; font-size: 12px; max-width: 300px; opacity: 0; transition: opacity .08s; }
 .tooltip b { color: var(--text-primary); }
 .tooltip .t-title { font-weight: 600; font-size: 13px; color: var(--text-primary); margin-bottom: 3px; }
