@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Where Should I Buy? - multi-criteria community ranker</title>
-<link rel="stylesheet" href="../assets/common.css?v=2">
-<script src="../assets/theme.js?v=2"></script>
+<link rel="stylesheet" href="../assets/common.css?v=3">
+<script src="../assets/theme.js?v=3"></script>
 <style>
   .layout { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 14px; align-items: start; }
   @media (max-width: 1360px) { .layout { grid-template-columns: 1fr; } }
@@ -22,9 +22,9 @@
   #table text { font-size: 12px; }
   .row { cursor: pointer; }
   .row .hl { fill: transparent; }
-  .row:hover .hl, .row.hover .hl { fill: #efede8; }
-  .row.sel .hl { fill: #e3eefc; }
-  .row.excluded text { fill: #b9b6ad; }
+  .row:hover .hl, .row.hover .hl { fill: var(--hover); }
+  .row.sel .hl { fill: var(--selected); }
+  .row.excluded text { fill: var(--faded); }
   .colhead { cursor: pointer; }
   .colhead text { font-size: 11px; }
   .colhead.on text { font-weight: 600; fill: var(--text-primary); }

@@ -21,7 +21,7 @@
 // ---------------------------------------------------------------------
 // Fixed settings
 // ---------------------------------------------------------------------
-const SLOT_HEX = ["#7b3fa0", "#1a9e8f", "#222222"]; // colours for the 3 picked communities (purple, teal, black: neutral, so they never look like the map's orange/blue)
+const SLOT_HEX = ["#7b3fa0", "#1a9e8f", "var(--slot-3)"]; // colours for the 3 picked communities (purple, teal, black: neutral, so they never look like the map's orange/blue)
 const DUBAI_GREY = "#8a8880";
 
 // Grid map: 13 x 11 squares of 60 px
@@ -260,7 +260,7 @@ function start(data) {
   const lyAxisG = lc.append("g").attr("class", "axis").attr("transform", `translate(${lm.l},0)`);
   const lgrid = lc.append("g").attr("class", "gridline");
   const lpaths = lc.append("g");
-  const yearRule = lc.append("line").attr("stroke", "#b9b6ad");
+  const yearRule = lc.append("line").attr("stroke", "var(--faded)");
 
   d3.select("#g-title").text(`Grid map of ${comms.length} communities`);
 
@@ -380,16 +380,18 @@ function start(data) {
       const g = d3.select(this);
       const metric = metricOf(d);
       const colour = metric ? vsupColor(state.metric, metric.v, metric.u, state.vsup === "on") : null;
-      const fill = colour ? colour.fill : "#efeeea"; // no value -> pale, dashed square
+      const fill = colour ? colour.fill : "var(--land-faint)"; // no value -> pale, dashed square
       const dark = colour && isDark(fill);
+      // text on a coloured square ignores the page theme; empty squares follow it
+      const ink = !colour ? "var(--text-primary)" : dark ? "#fff" : "#0b0b0b";
 
       g.select(".bg").transition(T).attr("fill", fill);
       g.select(".bg").attr("stroke", colour ? "none" : "var(--rule-strong)").attr("stroke-dasharray", colour ? null : "2 2");
-      g.select(".code").attr("fill", dark ? "#fff" : "var(--text-primary)");
+      g.select(".code").attr("fill", ink);
       g.select(".val")
-        .attr("fill", dark ? "#fff" : "var(--text-secondary)")
+        .attr("fill", !colour ? "var(--text-secondary)" : dark ? "#fff" : "#52514e")
         .text(metric ? (state.metric === "level" ? d3.format(".0f")(metric.v / 1000) + "k" : METRICS[state.metric].fmt(metric.v)) : "new");
-      g.select(".spark").attr("d", spark(d.traj)).attr("stroke", dark ? "#fff" : "var(--text-primary)");
+      g.select(".spark").attr("d", spark(d.traj)).attr("stroke", ink);
 
       const thisYear = d.traj.find((t) => t.y === state.year);
       const hasYear = thisYear && thisYear.cur != null;
@@ -397,7 +399,7 @@ function start(data) {
         .attr("display", hasYear ? null : "none")
         .attr("cx", sparkX(state.year))
         .attr("cy", hasYear ? sparkY(thisYear.cur) : 0)
-        .attr("fill", dark ? "#fff" : "var(--text-primary)");
+        .attr("fill", ink);
 
       const slot = state.selected.indexOf(d.c);
       g.select(".selring").attr("stroke", slot >= 0 ? SLOT_HEX[slot] : "none");
@@ -451,7 +453,7 @@ function start(data) {
         .attr("x", cx + Math.sin(a) * rTop)
         .attr("y", cy - Math.cos(a) * rTop - 2)
         .attr("text-anchor", t === 0 ? "end" : t === 1 ? "start" : "middle")
-        .attr("font-size", 11).attr("fill", "#0b0b0b").text(text);
+        .attr("font-size", 11).attr("fill", "var(--text-primary)").text(text);
     });
     if (state.vsup === "on") {
       svg.append("text").attr("x", cx).attr("y", cy + 18).attr("font-size", 10).attr("text-anchor", "middle")
@@ -528,8 +530,8 @@ function start(data) {
         .attr("cx", (p) => x(p.nA))
         .attr("cy", (p) => y(p.cur))
         .attr("r", (p) => (p.y === state.year ? 6 : 4))
-        .attr("fill", (p) => (p.y === 2026 ? "#fff" : s.color))
-        .attr("stroke", (p) => (p.y === 2026 ? s.color : "#fff"))
+        .attr("fill", (p) => (p.y === 2026 ? "var(--halo)" : s.color))
+        .attr("stroke", (p) => (p.y === 2026 ? s.color : "var(--halo)"))
         .attr("stroke-width", (p) => (p.y === 2026 ? 2 : 1.5))
         .on("mouseenter", (event, p) => showTip(event, pointTip(s, p)))
         .on("mousemove", moveTip)
@@ -602,10 +604,10 @@ function start(data) {
         .attr("fill", "none").attr("stroke", s.color).attr("stroke-width", 2);
       const now = pts.find((p) => p.y === state.year) || pts[pts.length - 1];
       g.select("circle").attr("cx", lx(now.y)).attr("cy", ly(now.cur)).attr("r", 4)
-        .attr("fill", s.color).attr("stroke", "#fff").attr("stroke-width", 1.5);
+        .attr("fill", s.color).attr("stroke", "var(--halo)").attr("stroke-width", 1.5);
       const last = pts[pts.length - 1];
       s._ll = ly(last.cur) + 4;
-      g.select("text").attr("x", lx(last.y) + 8).attr("fill", s.id === "dubai" ? "#52514e" : "#0b0b0b")
+      g.select("text").attr("x", lx(last.y) + 8).attr("fill", s.id === "dubai" ? "var(--text-secondary)" : "var(--text-primary)")
         .text(`${s.name} ${d3.format(".0f")(last.cur / 1000)}k`);
     });
 
