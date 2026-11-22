@@ -117,9 +117,9 @@ function start(data, geo) {
   const tram = data.stations.filter((s) => s.route === "Tram" && s.code !== "T2").sort(byNumber);
 
   const LINES = [
-    { key: "Red", name: "Red Line", col: "#col-a", stations: redMain, branch: route2020 },
-    { key: "Green", name: "Green Line", col: "#col-b", stations: green },
-    { key: "Tram", name: "Dubai Tram", col: "#col-b", stations: tram },
+    { key: "Red", name: "Red Line", sub: "Rashidiya to UAE Exchange, plus the branch to Expo", col: "#col-a", stations: redMain, branch: route2020 },
+    { key: "Green", name: "Green Line", sub: "The old city: Etisalat to Creek", col: "#col-b", stations: green },
+    { key: "Tram", name: "Dubai Tram", sub: "Dubai Marina, JBR and Al Sufouh", col: "#col-b", stations: tram },
   ];
 
   // --- scales -------------------------------------------------------------
@@ -178,6 +178,7 @@ function start(data, geo) {
     svg.append("rect").attr("x", 0).attr("y", 6).attr("width", 6).attr("height", 18).attr("rx", 2)
       .attr("fill", LINE_COLOR[L.key]);
     svg.append("text").attr("class", "line-title").attr("x", 12).attr("y", 20).text(L.name);
+    svg.append("text").attr("class", "axis-cap").attr("x", 12).attr("y", 35).text(L.sub); // which stretch of the city this line covers
     L.barCap = svg.append("text").attr("class", "axis-cap").attr("x", BAR_X).attr("y", HEAD - 8);
     svg.append("text").attr("class", "axis-cap").attr("x", PRICE_X).attr("y", 20)
       .text("Typical price, AED per m²");
