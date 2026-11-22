@@ -19,11 +19,10 @@ function aed(value) {
   return "AED " + d3.format(",.0f")(value / 1e3) + "k";
 }
 
-// A lighter, solid version of a colour (amount 0 = background, 1 = the colour).
+// A lighter, solid version of a colour (amount 0 = white, 1 = the colour).
 // Used instead of transparency so overlapping marks don't mix.
-// Mixed in CSS so it follows the light/dark theme.
 function tint(colour, amount) {
-  return `color-mix(in srgb, ${colour} ${amount * 100}%, var(--halo))`;
+  return d3.interpolateRgb("#fff", colour)(amount);
 }
 
 // ---------------------------------------------------------------------

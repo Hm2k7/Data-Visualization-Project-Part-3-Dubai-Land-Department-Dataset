@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Along the Line - Dubai metro & tram price profiles</title>
-<link rel="stylesheet" href="../assets/common.css">
-<script src="../assets/theme.js"></script>
+<link rel="stylesheet" href="../assets/common.css?v=2">
+<script src="../assets/theme.js?v=2"></script>
 <style>
   .layout { display: grid; grid-template-columns: minmax(0, 1fr) 372px; gap: 14px; align-items: start; }
   @media (max-width: 1260px) { .layout { grid-template-columns: 1fr; } }
@@ -13,11 +13,11 @@
   @media (max-width: 980px) { .lines { grid-template-columns: 1fr; } }
   .row { cursor: pointer; }
   .row .bg { fill: transparent; }
-  .row:hover .bg { fill: var(--hover); }
-  .row.sel .bg { fill: var(--selected); }
-  .row.dim text.name, .row.dim text.val, .row.dim text.none { fill: var(--dim-text); }
-  .row.dim .bar, .row.dim .med { fill: var(--dim-fill); stroke: var(--dim-stroke); }
-  .row.dim .iqr { stroke: var(--dim-iqr); }
+  .row:hover .bg { fill: #efede8; }
+  .row.sel .bg { fill: #e3eefc; }
+  .row.dim text.name, .row.dim text.val, .row.dim text.none { fill: #c9c6bd; }
+  .row.dim .bar, .row.dim .med { fill: #e4e2dc; stroke: #d6d3cb; }
+  .row.dim .iqr { stroke: #eceae5; }
   .row text.name { font-size: 12px; fill: var(--text-primary); }
   .row.empty text.name { fill: var(--text-muted); }
   .row text.val { font-size: 10.5px; fill: var(--text-secondary); }

@@ -206,11 +206,11 @@ function start(data, geo) {
 
     // Dubai median (dashed) and the brushed price band; positioned in update()
     L.dubaiLine = svg.append("line").attr("y1", HEAD - 2).attr("y2", H - 6)
-      .attr("stroke", "var(--text-muted)").attr("stroke-dasharray", "3 3");
+      .attr("stroke", "#8a8880").attr("stroke-dasharray", "3 3");
     L.dubaiLabel = svg.append("text").attr("class", "axis-cap")
       .attr("y", HEAD + 9 + rows.length * ROW).attr("text-anchor", "middle");
     L.band = svg.append("rect").attr("y", HEAD - 2).attr("height", H - HEAD)
-      .attr("fill", "var(--hover)").attr("display", "none");
+      .attr("fill", "#efede8").attr("display", "none");
 
     // The metro line itself (and the faded Route 2020 branch)
     const firstY = HEAD + ROW / 2;
@@ -244,8 +244,8 @@ function start(data, geo) {
     g.append("circle") // station stop on the line
       .attr("cx", LINE_X).attr("cy", ROW / 2)
       .attr("r", (r) => (INTERCHANGE[r.s.code] || BIG_STOPS.includes(r.s.code) ? 5.5 : 4))
-      .attr("fill", "var(--halo)")
-      .attr("stroke", (r) => (r.branch ? tint(LINE_COLOR.Red, 0.5) : LINE_COLOR[L.key]))
+      .attr("fill", "#fff")
+      .attr("stroke", (r) => (r.branch ? "#f1a4a3" : LINE_COLOR[L.key]))
       .attr("stroke-width", 2.5);
     g.append("rect").attr("class", "bar").attr("x", BAR_X).attr("y", 5).attr("height", ROW - 10)
       .attr("rx", 2).attr("width", 0);
@@ -269,7 +269,7 @@ function start(data, geo) {
   mapSvg.append("clipPath").attr("id", "mapclip").append("rect").attr("width", 340).attr("height", 240);
   const mapG = mapSvg.append("g").attr("clip-path", "url(#mapclip)");
   const commPaths = mapG.append("g").selectAll("path").data(geo.features).join("path")
-    .attr("d", path).attr("fill", "var(--land)").attr("stroke", "var(--halo)").attr("stroke-width", 0.6);
+    .attr("d", path).attr("fill", "#e9e7e1").attr("stroke", "#fff").attr("stroke-width", 0.6);
 
   // Dashed outline: areas in the 2006 freehold list (outside data)
   const FREEHOLD = new Set(data.freehold2006);
@@ -494,7 +494,7 @@ function start(data, geo) {
     const R = riders(st);
     const olderRiderYear = state.bar === "riders" && R && R.year < 2025;
     g.select(".bar")
-      .attr("fill", olderRiderYear ? "var(--faded)" : "var(--ink-bar)")
+      .attr("fill", olderRiderYear ? "#b9b6ad" : "#5d5c57")
       .transition(T)
       .attr("width", v ? Math.max(1.5, barScale(v)) : 0);
     g.select(".val")
@@ -511,7 +511,7 @@ function start(data, geo) {
       .attr("x2", t ? x(t.q[3]) : PRICE_X);
     g.select(".med")
       .attr("display", t ? null : "none")
-      .attr("fill", far ? "var(--halo)" : LINE_COLOR[L.key])
+      .attr("fill", far ? "#fff" : LINE_COLOR[L.key])
       .transition(T)
       .attr("cx", t ? x(t.q[2]) : PRICE_X);
     g.select(".none").text(INTERCHANGE[st.code] ? `see ${dataOf(st).name}` : t ? "" : "no home sales");
@@ -542,9 +542,9 @@ function start(data, geo) {
     }[state.bar];
     d3.select("#howto").html(`
       <span><svg width="58" height="14"><line x1="8" x2="50" y1="7" y2="7" stroke="${tint(c, 0.3)}" stroke-width="6" stroke-linecap="round"/><circle cx="26" cy="7" r="4.8" fill="${c}" stroke="${c}" stroke-width="2"/></svg>typical price (dot) and middle half of sales (band)</span>
-      <span><svg width="16" height="14"><circle cx="8" cy="7" r="4.8" fill="var(--halo)" stroke="${c}" stroke-width="2"/></svg>hollow = homes are more than 2 km away</span>
+      <span><svg width="16" height="14"><circle cx="8" cy="7" r="4.8" fill="#fff" stroke="${c}" stroke-width="2"/></svg>hollow = homes are more than 2 km away</span>
       <span><svg width="34" height="14"><line x1="2" x2="2" y1="0" y2="14" stroke="var(--text-primary)" stroke-dasharray="3 3"/></svg>Dubai median</span>
-      <span><svg width="30" height="14"><rect x="0" y="3" width="26" height="9" rx="2" fill="var(--ink-bar)"/></svg>${barMeaning}</span>`);
+      <span><svg width="30" height="14"><rect x="0" y="3" width="26" height="9" rx="2" fill="#5d5c57"/></svg>${barMeaning}</span>`);
   }
 
   // --- side panel for the selected station ---------------------------------
@@ -626,7 +626,7 @@ function start(data, geo) {
     svg.append("path").attr("d", d3.line().curve(d3.curveStepAfter)(stepPoints))
       .attr("fill", "none").attr("stroke", "var(--text-primary)").attr("stroke-width", 1.5);
     svg.append("text").attr("x", m.l).attr("y", 11).attr("font-size", 11)
-      .html(`<tspan fill="#2a78d6">■ this station</tspan>  <tspan fill="var(--text-primary)">line = all of Dubai</tspan>`);
+      .html(`<tspan fill="#2a78d6">■ this station</tspan>  <tspan fill="#0b0b0b">line = all of Dubai</tspan>`);
   }
 
   // Waffle: 100 squares = the mix of home types sold (studio, 1BR, … villa)
@@ -656,7 +656,7 @@ function start(data, geo) {
     data.segs.forEach((name, i) => {
       const row = legend.append("g").attr("transform", `translate(${(i % 2) * 108},${Math.floor(i / 2) * 30})`);
       row.append("rect").attr("width", 10).attr("height", 10).attr("rx", 2).attr("fill", SEG_COLORS[i]).attr("y", 2);
-      row.append("text").attr("x", 15).attr("y", 11).attr("font-size", 12).attr("fill", "var(--text-primary)")
+      row.append("text").attr("x", 15).attr("y", 11).attr("font-size", 12).attr("fill", "#0b0b0b")
         .text(name === "Villa" ? "Villa/townhouse" : name);
       row.append("text").attr("x", 15).attr("y", 24).attr("font-size", 11).attr("class", "num").text(`${cells[i]}%`);
     });
@@ -668,7 +668,7 @@ function start(data, geo) {
     const maxCount = d3.max([...counts.values()]) || 1;
     const colour = d3.scaleSequential([0, maxCount], d3.interpolateRgb("#cde2fb", "#184f95"));
     commPaths.transition().duration(300)
-      .attr("fill", (f) => (counts.has(f.properties.c) ? colour(counts.get(f.properties.c)) : "var(--land)"));
+      .attr("fill", (f) => (counts.has(f.properties.c) ? colour(counts.get(f.properties.c)) : "#e9e7e1"));
 
     selMark.selectAll("*").remove();
     if (s.lat) {
@@ -679,11 +679,11 @@ function start(data, geo) {
           if (!f) return;
           const [cx, cy] = path.centroid(f);
           selMark.append("line").attr("x1", px).attr("y1", py).attr("x2", cx).attr("y2", cy)
-            .attr("stroke", "var(--text-muted)");
+            .attr("stroke", "#8a8880");
         });
       }
       selMark.append("circle").attr("cx", px).attr("cy", py).attr("r", 6)
-        .attr("fill", "var(--halo)").attr("stroke", "var(--text-primary)").attr("stroke-width", 2.5);
+        .attr("fill", "#fff").attr("stroke", "var(--text-primary)").attr("stroke-width", 2.5);
     }
     d3.select("#p-map-note").text(
       (s.lat
@@ -698,14 +698,14 @@ function start(data, geo) {
     const svg = d3.select("#p-venues");
     svg.selectAll("*").remove();
     if (!s.venues) {
-      svg.append("text").attr("y", 14).attr("font-size", 12).attr("fill", "var(--text-muted)").text("No venue data for this stop.");
+      svg.append("text").attr("y", 14).attr("font-size", 12).attr("fill", "#8a8880").text("No venue data for this stop.");
       return;
     }
     const vals = VENUE_GROUPS.map((grp) => ({ name: grp.name, v: d3.sum(grp.cats, (c) => s.venues[c] || 0) }));
     const vx = d3.scaleLinear().domain([0, d3.max(vals, (d) => d.v) || 1]).range([0, 150]);
     const r = svg.selectAll("g").data(vals).join("g").attr("transform", (d, i) => `translate(0,${i * 19})`);
-    r.append("text").attr("y", 12).attr("font-size", 12).attr("fill", "var(--text-primary)").text((d) => d.name);
-    r.append("rect").attr("x", 130).attr("y", 3).attr("height", 11).attr("rx", 2).attr("fill", "var(--ink-bar)")
+    r.append("text").attr("y", 12).attr("font-size", 12).attr("fill", "#0b0b0b").text((d) => d.name);
+    r.append("rect").attr("x", 130).attr("y", 3).attr("height", 11).attr("rx", 2).attr("fill", "#5d5c57")
       .attr("width", (d) => Math.max(1, vx(d.v)));
     r.append("text").attr("x", (d) => 134 + vx(d.v)).attr("y", 12).attr("font-size", 11).attr("class", "num").text((d) => d.v);
   }
